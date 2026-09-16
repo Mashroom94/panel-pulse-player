@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1118">
+  <meta name="description" content="Аудиореактивный плеер: музыка меняет погоду и зажигает окна панельного дома.">
+  <title>Panel Pulse</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="mood-calm" data-color="blue">
+  <main class="scene" aria-label="Аудиореактивная сцена с панельным домом">
+    <div class="scene-art" aria-hidden="true">
+      <img src="assets/panel-house.png" alt="" class="house-photo">
+      <div class="atmosphere"></div>
+      <div class="sun"></div>
+      <div class="moon"></div>
+      <div class="window-field" id="windowField"></div>
+    </div>
+    <canvas id="weather" aria-hidden="true"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Panel Pulse — в начало">
+        <span class="brand-mark">P<span>/</span>P</span>
+        <span class="brand-copy">PANEL PULSE<small>urban audio system</small></span>
+      </a>
+
+      <div class="status" aria-live="polite">
+        <span class="status-dot"></span>
+        <span id="moodLabel">СПОКОЙНАЯ · НОЧЬ / СНЕГ</span>
+      </div>
+
+      <div class="color-switcher" aria-label="Цвет окон">
+        <span>СВЕТ ОКОН</span>
+        <div class="swatches" role="group" aria-label="Выбрать цвет подсветки">
+          <button class="swatch active" data-color="blue" style="--swatch:#71b7ff" aria-label="Синий" aria-pressed="true"></button>
+          <button class="swatch" data-color="green" style="--swatch:#75f6a2" aria-label="Зелёный" aria-pressed="false"></button>
+          <button class="swatch" data-color="pink" style="--swatch:#ff7ac8" aria-label="Розовый" aria-pressed="false"></button>
+          <button class="swatch" data-color="yellow" style="--swatch:#ffe36d" aria-label="Жёлтый" aria-pressed="false"></button>
+          <button class="swatch" data-color="orange" style="--swatch:#ff9b53" aria-label="Оранжевый" aria-pressed="false"></button>
+        </div>
+      </div>
+    </header>
+
+    <aside class="tracklist" aria-label="Треки">
+      <div class="tracklist-head"><span>ТРЕКИ</span><span id="trackCounter">01 / 06</span></div>
+      <div id="trackButtons"></div>
+    </aside>
+
+    <section class="device-zone" aria-label="Карманный плеер">
+      <div class="device" id="device">
+        <img src="assets/hand-player.png" alt="Рука держит карманный музыкальный плеер" draggable="false">
+
+        <div class="device-screen">
+          <div class="screen-top">
+            <span id="screenIndex">01</span>
+            <span id="screenMood">CALM</span>
+          </div>
+          <div class="screen-title" id="screenTitle">IN CONFUSION</div>
+          <div class="screen-artist">RAREERRA</div>
+          <div class="equalizer" id="equalizer" aria-hidden="true"></div>
+          <div class="progress-row">
+            <span id="elapsed">0:00</span>
+            <div class="screen-progress"><i id="screenProgress"></i></div>
+            <span id="duration">0:00</span>
+          </div>
+        </div>
+
+        <div class="wheel" aria-label="Управление плеером">
+          <button class="wheel-btn wheel-menu" id="listToggle" aria-label="Показать или скрыть список треков">MENU</button>
+          <button class="wheel-btn wheel-prev" id="prev" aria-label="Предыдущий трек">◀◀</button>
+          <button class="wheel-btn wheel-next" id="next" aria-label="Следующий трек">▶▶</button>
+          <button class="wheel-btn wheel-play" id="play" aria-label="Воспроизвести">▶<span class="sr-only">Воспроизвести</span></button>
+          <button class="wheel-btn wheel-vol-up" id="volUp" aria-label="Громче">＋</button>
+          <button class="wheel-btn wheel-vol-down" id="volDown" aria-label="Тише">−</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="now-playing" aria-live="polite">
+      <div><span>СЕЙЧАС</span><strong id="nowTitle">In Confusion</strong></div>
+      <button id="mute" aria-label="Включить или выключить звук">VOL <span id="volumeText">78</span></button>
+    </div>
+
+    <div class="hint">КНОПКИ НА ПЛЕЕРЕ РАБОТАЮТ · SPACE — PLAY / PAUSE</div>
+    <audio id="audio" preload="metadata" crossorigin="anonymous"></audio>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -26,6 +26,11 @@ const elapsed = document.querySelector('#elapsed');
 const duration = document.querySelector('#duration');
 const progress = document.querySelector('#screenProgress');
 const seek = document.querySelector('#seek');
+const nowScreen = document.querySelector('#nowScreen');
+const allScreen = document.querySelector('#allScreen');
+const allButton = document.querySelector('#allButton');
+const allClose = document.querySelector('#allClose');
+const trackList = document.querySelector('#trackList');
 const equalizer = document.querySelector('#equalizer');
 const windowField = document.querySelector('#windowField');
 const canvas = document.querySelector('#weather');
@@ -43,6 +48,8 @@ let lastBeat = 0;
 let lastWindowPulse = 0;
 let particles = [];
 let weatherMode = moodMeta[currentMood].weather;
+let screenMode = 'now';
+let pendingTrack = 0;
 
 const eqBars = Array.from({ length: 18 }, () => {
   const bar = document.createElement('i');
@@ -55,18 +62,17 @@ const eqBars = Array.from({ length: 18 }, () => {
 // Coordinates are measured against the source photograph (1672 × 941).
 // Every overlay is sized to the glass area of one real window bay.
 const windowColumns = [
-  { x: 12.8, w: 1.95 }, { x: 17.2, w: 2.4 }, { x: 21.5, w: 4.2 },
+  { x: 12.8, w: 1.95 }, { x: 17.2, w: 2.4 },
   { x: 27.7, w: 2.0 }, { x: 32.3, w: 2.4 }, { x: 37.7, w: 2.2 },
-  { x: 42.9, w: 2.2 }, { x: 47.0, w: 4.5 }, { x: 55.0, w: 2.2 },
+  { x: 42.9, w: 2.2 }, { x: 55.0, w: 2.2 },
   { x: 60.2, w: 2.1 }, { x: 65.5, w: 2.1 }, { x: 70.4, w: 2.0 },
-  { x: 74.6, w: 4.4 }, { x: 80.4, w: 2.2 }, { x: 85.6, w: 1.9 }
+  { x: 80.4, w: 2.2 }, { x: 85.6, w: 1.9 }
 ];
 const windowRows = [15.8, 21.5, 27.2, 32.8, 38.7, 44.4, 50.2, 56.0, 61.8, 67.8, 73.9];
 const windows = [];
 
 windowRows.forEach((y, row) => {
   windowColumns.forEach((column, col) => {
-    if (row === 10 && col === 7) return;
     const light = document.createElement('i');
     light.className = 'window-light';
     light.style.setProperty('--x', `${column.x}%`);
@@ -105,7 +111,49 @@ function loadTrack(index, autoplay = false) {
   smoothBass = 0;
   setMood(track.mood);
   clearWindows();
+  renderTrackList();
   if (autoplay) playAudio();
+}
+
+function renderTrackList() {
+  trackList.innerHTML = '';
+  tracks.forEach((track, index) => {
+    const item = document.createElement('li');
+    item.className = 'track-item';
+    item.classList.toggle('selected', index === pendingTrack);
+    item.classList.toggle('current', index === current);
+    const button = document.createElement('button');
+    button.className = 'track-choice';
+    button.type = 'button';
+    button.innerHTML = `<span>${track.title.toUpperCase()}</span>`;
+    button.addEventListener('click', () => {
+      pendingTrack = index;
+      renderTrackList();
+    });
+    item.appendChild(button);
+    trackList.appendChild(item);
+  });
+}
+
+function showAllTracks() {
+  screenMode = 'all';
+  pendingTrack = current;
+  nowScreen.hidden = true;
+  allScreen.hidden = false;
+  scene.classList.add('browsing');
+  renderTrackList();
+}
+
+function showNowPlaying() {
+  screenMode = 'now';
+  nowScreen.hidden = false;
+  allScreen.hidden = true;
+  scene.classList.remove('browsing');
+}
+
+function moveTrackSelection(step) {
+  pendingTrack = (pendingTrack + step + tracks.length) % tracks.length;
+  renderTrackList();
 }
 
 function initAudioGraph() {
@@ -128,6 +176,11 @@ async function playAudio() {
 }
 
 function togglePlay() {
+  if (screenMode === 'all') {
+    showNowPlaying();
+    loadTrack(pendingTrack, true);
+    return;
+  }
   if (audio.paused) playAudio(); else audio.pause();
 }
 
@@ -203,15 +256,15 @@ function resizeCanvas() {
 function makeParticle() {
   if (weatherMode === 'rain') return { x: Math.random() * innerWidth, y: -30, vx: -1.8 - Math.random() * 1.2, vy: 12 + Math.random() * 10, size: 10 + Math.random() * 18, alpha: .18 + Math.random() * .3 };
   if (weatherMode === 'snow') {
-    const depth = .18 + Math.random() * .82;
-    return { x: Math.random() * innerWidth, y: -12 - Math.random() * innerHeight * .15, vx: (-.35 + Math.random() * .7) * depth, vy: .25 + depth * 1.35, size: .45 + depth * 2.2, alpha: .2 + depth * .62, phase: Math.random() * Math.PI * 2, spin: .35 + Math.random() * .8, depth };
+    const depth = .12 + Math.random() * .88;
+    return { x: Math.random() * innerWidth, y: -12 - Math.random() * innerHeight * .28, vx: (-.12 + Math.random() * .24) * depth, vy: .1 + depth * .5, size: .5 + depth * 2.3, alpha: .16 + depth * .52, phase: Math.random() * Math.PI * 2, spin: .16 + Math.random() * .35, depth };
   }
   return { x: Math.random() * innerWidth, y: innerHeight * (.1 + Math.random() * .65), vx: -.1 + Math.random() * .2, vy: -.06 - Math.random() * .12, size: .5 + Math.random() * 1.5, alpha: .1 + Math.random() * .25 };
 }
 
 function drawWeather(now) {
   ctx.clearRect(0, 0, innerWidth, innerHeight);
-  const target = weatherMode === 'rain' ? 170 : weatherMode === 'snow' ? 190 : weatherMode === 'dust' ? 42 : 0;
+  const target = weatherMode === 'rain' ? 170 : weatherMode === 'snow' ? 145 : weatherMode === 'dust' ? 42 : 0;
   while (particles.length < target) particles.push(makeParticle());
   if (particles.length > target) particles.length = target;
 
@@ -224,17 +277,12 @@ function drawWeather(now) {
       ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.vx, p.y + p.size); ctx.stroke();
     } else if (weatherMode === 'snow') {
       p.y += p.vy;
-      p.x += p.vx + Math.sin(now / (900 / p.spin) + p.phase) * (.08 + p.depth * .32);
+      p.x += p.vx + Math.sin(now / (1800 / p.spin) + p.phase) * (.035 + p.depth * .11);
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(now * .00018 * p.spin + p.phase);
       ctx.fillStyle = `rgba(241,248,255,${p.alpha})`;
-      ctx.beginPath(); ctx.ellipse(0, 0, p.size, p.size * .74, 0, 0, Math.PI * 2); ctx.fill();
-      if (p.depth > .72) {
-        ctx.strokeStyle = `rgba(247,251,255,${p.alpha * .6})`;
-        ctx.lineWidth = .45;
-        ctx.beginPath(); ctx.moveTo(-p.size * 1.5, 0); ctx.lineTo(p.size * 1.5, 0); ctx.moveTo(0, -p.size * 1.5); ctx.lineTo(0, p.size * 1.5); ctx.stroke();
-      }
+      ctx.beginPath(); ctx.ellipse(0, 0, p.size, p.size * (.7 + p.depth * .18), 0, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     } else {
       p.x += p.vx; p.y += p.vy;
@@ -270,10 +318,12 @@ audio.addEventListener('timeupdate', () => {
 audio.addEventListener('error', () => { weatherLabel.textContent = 'ТРЕК НЕДОСТУПЕН'; });
 
 playButton.addEventListener('click', togglePlay);
-document.querySelector('#prev').addEventListener('click', () => loadTrack(current - 1, true));
-document.querySelector('#next').addEventListener('click', () => loadTrack(current + 1, true));
-document.querySelector('#volUp').addEventListener('click', () => setVolume(audio.volume + .08));
-document.querySelector('#volDown').addEventListener('click', () => setVolume(audio.volume - .08));
+document.querySelector('#prev').addEventListener('click', () => { if (screenMode === 'now') loadTrack(current - 1, true); });
+document.querySelector('#next').addEventListener('click', () => { if (screenMode === 'now') loadTrack(current + 1, true); });
+document.querySelector('#volUp').addEventListener('click', () => screenMode === 'all' ? moveTrackSelection(-1) : setVolume(audio.volume + .08));
+document.querySelector('#volDown').addEventListener('click', () => screenMode === 'all' ? moveTrackSelection(1) : setVolume(audio.volume - .08));
+allButton.addEventListener('click', showAllTracks);
+allClose.addEventListener('click', showNowPlaying);
 seek.addEventListener('click', event => {
   if (!audio.duration) return;
   const rect = seek.getBoundingClientRect();
@@ -295,10 +345,10 @@ document.querySelectorAll('.screen-swatch').forEach(button => {
 
 document.addEventListener('keydown', event => {
   if (event.code === 'Space') { event.preventDefault(); togglePlay(); }
-  if (event.code === 'ArrowRight') loadTrack(current + 1, true);
-  if (event.code === 'ArrowLeft') loadTrack(current - 1, true);
-  if (event.code === 'ArrowUp') setVolume(audio.volume + .05);
-  if (event.code === 'ArrowDown') setVolume(audio.volume - .05);
+  if (event.code === 'ArrowRight' && screenMode === 'now') loadTrack(current + 1, true);
+  if (event.code === 'ArrowLeft' && screenMode === 'now') loadTrack(current - 1, true);
+  if (event.code === 'ArrowUp') screenMode === 'all' ? moveTrackSelection(-1) : setVolume(audio.volume + .05);
+  if (event.code === 'ArrowDown') screenMode === 'all' ? moveTrackSelection(1) : setVolume(audio.volume - .05);
 });
 window.addEventListener('resize', resizeCanvas);
 

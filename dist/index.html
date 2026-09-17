@@ -25,35 +25,48 @@
         <img src="assets/hand-player-v2.png" alt="Рука держит карманный музыкальный плеер" draggable="false">
 
         <div class="device-screen">
-          <div class="screen-top">
-            <span id="screenIndex">01 / 06</span>
-            <span id="screenMood">RAIN</span>
-            <span>VOL <b id="volumeText">78</b></span>
-          </div>
-          <div class="screen-title" id="screenTitle">IN CONFUSION</div>
-          <div class="screen-artist">RAREERRA</div>
-          <div class="equalizer" id="equalizer" aria-hidden="true"></div>
-          <div class="progress-row">
-            <span id="elapsed">0:00</span>
-            <button class="screen-progress" id="seek" aria-label="Перемотать трек"><i id="screenProgress"></i></button>
-            <span id="duration">0:00</span>
-          </div>
-          <div class="screen-bottom">
-            <span id="weatherLabel">ВЕЧЕР · ДОЖДЬ</span>
-            <div class="screen-swatches" role="group" aria-label="Цвет подсветки окон">
-              <button class="screen-swatch active" data-color="blue" style="--swatch:#46a8ff" aria-label="Синий" aria-pressed="true"></button>
-              <button class="screen-swatch" data-color="green" style="--swatch:#48f78b" aria-label="Зелёный" aria-pressed="false"></button>
-              <button class="screen-swatch" data-color="pink" style="--swatch:#ff4fb7" aria-label="Розовый" aria-pressed="false"></button>
-              <button class="screen-swatch" data-color="yellow" style="--swatch:#ffe44f" aria-label="Жёлтый" aria-pressed="false"></button>
-              <button class="screen-swatch" data-color="orange" style="--swatch:#ff7b32" aria-label="Оранжевый" aria-pressed="false"></button>
+          <div class="now-screen" id="nowScreen">
+            <div class="screen-top">
+              <span id="screenIndex">01 / 06</span>
+              <span id="screenMood">RAIN</span>
+              <button class="all-button" id="allButton" type="button" aria-label="Открыть все треки">ALL</button>
             </div>
+            <div class="screen-title-row">
+              <div class="screen-title" id="screenTitle">IN CONFUSION</div>
+              <span class="screen-volume">VOL <b id="volumeText">78</b></span>
+            </div>
+            <div class="screen-artist">RAREERRA</div>
+            <div class="equalizer" id="equalizer" aria-hidden="true"></div>
+            <div class="progress-row">
+              <span id="elapsed">0:00</span>
+              <button class="screen-progress" id="seek" aria-label="Перемотать трек"><i id="screenProgress"></i></button>
+              <span id="duration">0:00</span>
+            </div>
+            <div class="screen-bottom">
+              <span id="weatherLabel">ВЕЧЕР · ДОЖДЬ</span>
+              <div class="color-picker">
+                <div class="screen-swatches" role="group" aria-label="Цвет подсветки окон">
+                  <button class="screen-swatch active" data-color="blue" style="--swatch:#46a8ff" aria-label="Синий" aria-pressed="true"></button>
+                  <button class="screen-swatch" data-color="green" style="--swatch:#48f78b" aria-label="Зелёный" aria-pressed="false"></button>
+                  <button class="screen-swatch" data-color="pink" style="--swatch:#ff4fb7" aria-label="Розовый" aria-pressed="false"></button>
+                  <button class="screen-swatch" data-color="yellow" style="--swatch:#ffe44f" aria-label="Жёлтый" aria-pressed="false"></button>
+                  <button class="screen-swatch" data-color="orange" style="--swatch:#ff7b32" aria-label="Оранжевый" aria-pressed="false"></button>
+                </div>
+                <span class="color-hint">ВЫБЕРИ ЦВЕТ</span>
+              </div>
+            </div>
+          </div>
+          <div class="all-screen" id="allScreen" hidden>
+            <div class="all-heading"><span>ALL TRACKS</span><button id="allClose" type="button" aria-label="Закрыть список треков">BACK</button></div>
+            <ol class="track-list" id="trackList"></ol>
+            <div class="all-hint">+/− ВЫБОР · PLAY ЗАПУСК</div>
           </div>
         </div>
 
         <div class="wheel" aria-label="Управление плеером">
           <button class="wheel-btn wheel-vol-up" id="volUp" aria-label="Увеличить громкость">＋</button>
           <button class="wheel-btn wheel-prev" id="prev" aria-label="Предыдущий трек">◀◀</button>
-          <button class="wheel-btn wheel-play" id="play" aria-label="Воспроизвести или поставить на паузу"><span id="playIcon">▶</span><span class="pause-mark">Ⅱ</span></button>
+          <button class="wheel-btn wheel-play" id="play" aria-label="Воспроизвести или поставить на паузу"><span class="play-mark" aria-hidden="true">▶</span><span class="pause-mark" aria-hidden="true"><i></i><i></i></span></button>
           <button class="wheel-btn wheel-next" id="next" aria-label="Следующий трек">▶▶</button>
           <button class="wheel-btn wheel-vol-down" id="volDown" aria-label="Уменьшить громкость">−</button>
         </div>

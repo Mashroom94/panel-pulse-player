@@ -264,7 +264,7 @@ function makeParticle() {
 
 function drawWeather(now) {
   ctx.clearRect(0, 0, innerWidth, innerHeight);
-  const target = weatherMode === 'rain' ? 170 : weatherMode === 'snow' ? 145 : weatherMode === 'dust' ? 42 : 0;
+  const target = audio.paused ? 0 : weatherMode === 'rain' ? 170 : weatherMode === 'snow' ? 145 : weatherMode === 'dust' ? 42 : 0;
   while (particles.length < target) particles.push(makeParticle());
   if (particles.length > target) particles.length = target;
 
@@ -307,6 +307,7 @@ audio.addEventListener('pause', () => {
   scene.classList.remove('playing');
   playButton.setAttribute('aria-label', 'Воспроизвести');
   clearWindows();
+  particles = [];
 });
 audio.addEventListener('ended', () => loadTrack(current + 1, true));
 audio.addEventListener('loadedmetadata', () => { duration.textContent = formatTime(audio.duration); });

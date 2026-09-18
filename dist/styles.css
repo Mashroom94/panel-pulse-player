@@ -102,7 +102,7 @@ body.mood-romantic .atmosphere { background:linear-gradient(180deg, rgba(8,18,48
   overflow: hidden;
   color: #d9efff;
   background: #071017;
-  border-radius: 2.5%;
+  border-radius: 4%;
   text-shadow: none;
 }
 .now-screen, .all-screen { width:100%; height:100%; }
@@ -115,7 +115,7 @@ body.mood-romantic .atmosphere { background:linear-gradient(180deg, rgba(8,18,48
 .all-button:focus-visible, #allClose:focus-visible { outline:1px solid var(--window); outline-offset:2px; }
 .screen-title-row { display:flex; align-items:flex-end; justify-content:space-between; gap:5%; margin-top:3.5%; }
 .screen-title { min-width:0; font-size:clamp(10px,1.36vh,14px); line-height:1.08; font-weight:800; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.screen-volume { flex:none; font-size:clamp(5px,.62vh,8px); opacity:.66; white-space:nowrap; }
+.screen-volume { flex:none; font-size:clamp(6px,.72vh,9px); opacity:.76; white-space:nowrap; }
 .screen-artist { margin-top:1.5%; font-size:clamp(6px,.78vh,9px); letter-spacing:.16em; opacity:.66; }
 .equalizer { height:21%; margin-top:2.8%; display:flex; align-items:flex-end; gap:2.2%; }
 .eq-bar { flex:1; min-height:6%; background:var(--window); box-shadow:none; transition:height 70ms linear, background .22s ease; }
@@ -129,7 +129,7 @@ body.mood-romantic .atmosphere { background:linear-gradient(180deg, rgba(8,18,48
 .screen-swatches { display:flex; gap:clamp(2px,.35vh,4px); }
 .screen-swatch { appearance:none; width:clamp(8px,1.1vh,12px); height:clamp(8px,1.1vh,12px); padding:0; border:1px solid rgba(255,255,255,.38); background:var(--swatch); cursor:pointer; opacity:.58; }
 .screen-swatch.active { opacity:1; outline:1px solid #fff; outline-offset:1px; box-shadow:none; }
-.color-hint { font-size:clamp(4px,.49vh,6px); line-height:1; letter-spacing:.09em; opacity:.58; white-space:nowrap; }
+.color-hint { font-size:clamp(5px,.58vh,7px); line-height:1; letter-spacing:.09em; opacity:.7; white-space:nowrap; }
 
 .all-screen[hidden] { display:none; }
 .all-heading { display:flex; align-items:center; justify-content:space-between; font-size:clamp(7px,.85vh,10px); font-weight:800; letter-spacing:.11em; }
@@ -151,8 +151,8 @@ body.mood-romantic .atmosphere { background:linear-gradient(180deg, rgba(8,18,48
 .wheel-next { right:2%; top:34%; width:28%; height:32%; font-size:clamp(8px,1.05vh,12px); }
 .wheel-play { left:35%; top:35%; width:30%; aspect-ratio:1; border-radius:50%; font-size:clamp(11px,1.45vh,16px); display:flex; align-items:center; justify-content:center; }
 .play-mark { display:block; transform:translateX(7%); }
-.pause-mark { display:none; align-items:center; justify-content:center; gap:4px; }
-.pause-mark i { display:block; width:4px; height:15px; border-radius:1px; background:currentColor; }
+.pause-mark { display:none; align-items:center; justify-content:center; gap:2px; }
+.pause-mark i { display:block; width:3px; height:11px; border-radius:1px; background:currentColor; }
 .scene.playing:not(.browsing) .play-mark { display:none; }
 .scene.playing:not(.browsing) .pause-mark { display:flex; }
 

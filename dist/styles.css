@@ -48,9 +48,9 @@ body.mood-sad .atmosphere { background: linear-gradient(180deg, rgba(21,35,65,.5
 body.mood-calm .scene-art { filter: brightness(.37) saturate(.6) contrast(1.1) hue-rotate(7deg); }
 body.mood-calm .scene { background:linear-gradient(#1a2b40, #111c2a); }
 body.mood-calm .atmosphere { background: linear-gradient(180deg, rgba(8,22,52,.72), rgba(18,34,51,.38)); }
-body.mood-romantic .scene-art { filter: brightness(.74) saturate(1.3) contrast(1.04) sepia(.12); }
-body.mood-romantic .scene { background:linear-gradient(#61415d, #3f334d); }
-body.mood-romantic .atmosphere { background: linear-gradient(180deg, rgba(127,48,131,.22), rgba(247,104,86,.46) 42%, rgba(31,25,43,.08) 76%); }
+body.mood-romantic .scene-art { filter: brightness(.42) saturate(.74) contrast(1.1) hue-rotate(8deg); }
+body.mood-romantic .scene { background:linear-gradient(#111d36, #1e1730); }
+body.mood-romantic .atmosphere { background:linear-gradient(180deg, rgba(8,18,48,.76), rgba(29,20,54,.4)); }
 
 .window-field {
   position: absolute;
@@ -94,15 +94,15 @@ body.mood-romantic .atmosphere { background: linear-gradient(180deg, rgba(127,48
 
 .device-screen {
   position: absolute;
-  left: 19.7%;
-  top: 15.8%;
-  width: 60.6%;
-  height: 31.8%;
+  left: 20.5%;
+  top: 17.7%;
+  width: 59%;
+  height: 29.6%;
   padding: 4.2% 5% 3.2%;
   overflow: hidden;
   color: #d9efff;
   background: #071017;
-  border-radius: 1.2%;
+  border-radius: 2.5%;
   text-shadow: none;
 }
 .now-screen, .all-screen { width:100%; height:100%; }

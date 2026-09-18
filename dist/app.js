@@ -9,9 +9,9 @@ const tracks = [
 
 const moodMeta = {
   sad: { short: 'RAIN', label: 'ВЕЧЕР · ДОЖДЬ', weather: 'rain' },
-  calm: { short: 'SNOW', label: 'НОЧЬ · СНЕГ', weather: 'snow' },
+  calm: { short: 'CLEAR', label: 'НОЧЬ · ЯСНО', weather: 'clear' },
   happy: { short: 'SUN', label: 'ДЕНЬ · СОЛНЦЕ', weather: 'clear' },
-  romantic: { short: 'DUSK', label: 'ЗАКАТ', weather: 'dust' }
+  romantic: { short: 'STARS', label: 'ЗВЁЗДНАЯ НОЧЬ', weather: 'stars' }
 };
 
 const audio = document.querySelector('#audio');
@@ -255,16 +255,12 @@ function resizeCanvas() {
 
 function makeParticle() {
   if (weatherMode === 'rain') return { x: Math.random() * innerWidth, y: -30, vx: -1.8 - Math.random() * 1.2, vy: 12 + Math.random() * 10, size: 10 + Math.random() * 18, alpha: .18 + Math.random() * .3 };
-  if (weatherMode === 'snow') {
-    const depth = .12 + Math.random() * .88;
-    return { x: Math.random() * innerWidth, y: -8 - Math.random() * innerHeight * .28, vx: (-.1 + Math.random() * .2) * depth, vy: .08 + depth * .4, size: .35 + depth * 1.25, alpha: .12 + depth * .42, phase: Math.random() * Math.PI * 2, spin: .14 + Math.random() * .28, depth };
-  }
-  return { x: Math.random() * innerWidth, y: innerHeight * (.1 + Math.random() * .65), vx: -.1 + Math.random() * .2, vy: -.06 - Math.random() * .12, size: .5 + Math.random() * 1.5, alpha: .1 + Math.random() * .25 };
+  return { x: Math.random() * innerWidth, y: Math.random() * innerHeight * .105, vx: 0, vy: 0, size: .35 + Math.random() * .85, alpha: .24 + Math.random() * .58, phase: Math.random() * Math.PI * 2, twinkle: .0007 + Math.random() * .0012 };
 }
 
 function drawWeather(now) {
   ctx.clearRect(0, 0, innerWidth, innerHeight);
-  const target = audio.paused ? 0 : weatherMode === 'rain' ? 170 : weatherMode === 'snow' ? 145 : weatherMode === 'dust' ? 42 : 0;
+  const target = audio.paused ? 0 : weatherMode === 'rain' ? 170 : weatherMode === 'stars' ? 105 : 0;
   while (particles.length < target) particles.push(makeParticle());
   if (particles.length > target) particles.length = target;
 
@@ -275,19 +271,12 @@ function drawWeather(now) {
       ctx.strokeStyle = `rgba(184,213,236,${p.alpha})`;
       ctx.lineWidth = .7;
       ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.vx, p.y + p.size); ctx.stroke();
-    } else if (weatherMode === 'snow') {
-      p.y += p.vy;
-      p.x += p.vx + Math.sin(now / (1800 / p.spin) + p.phase) * (.035 + p.depth * .11);
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(now * .00018 * p.spin + p.phase);
-      ctx.fillStyle = `rgba(241,248,255,${p.alpha})`;
-      ctx.beginPath(); ctx.ellipse(0, 0, p.size, p.size * (.7 + p.depth * .18), 0, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-    } else {
-      p.x += p.vx; p.y += p.vy;
-      ctx.fillStyle = `rgba(255,218,166,${p.alpha})`;
+    } else if (weatherMode === 'stars') {
+      const shimmer = .58 + Math.sin(now * p.twinkle + p.phase) * .34;
+      ctx.fillStyle = `rgba(220,234,255,${Math.max(.08, p.alpha * shimmer)})`;
       ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+    } else {
+      continue;
     }
     if (p.y > innerHeight + 35 || p.y < -50 || p.x < -50 || p.x > innerWidth + 50) particles[i] = makeParticle();
   }

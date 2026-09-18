@@ -257,7 +257,7 @@ function makeParticle() {
   if (weatherMode === 'rain') return { x: Math.random() * innerWidth, y: -30, vx: -1.8 - Math.random() * 1.2, vy: 12 + Math.random() * 10, size: 10 + Math.random() * 18, alpha: .18 + Math.random() * .3 };
   if (weatherMode === 'snow') {
     const depth = .12 + Math.random() * .88;
-    return { x: Math.random() * innerWidth, y: -12 - Math.random() * innerHeight * .28, vx: (-.12 + Math.random() * .24) * depth, vy: .1 + depth * .5, size: .5 + depth * 2.3, alpha: .16 + depth * .52, phase: Math.random() * Math.PI * 2, spin: .16 + Math.random() * .35, depth };
+    return { x: Math.random() * innerWidth, y: -8 - Math.random() * innerHeight * .28, vx: (-.1 + Math.random() * .2) * depth, vy: .08 + depth * .4, size: .35 + depth * 1.25, alpha: .12 + depth * .42, phase: Math.random() * Math.PI * 2, spin: .14 + Math.random() * .28, depth };
   }
   return { x: Math.random() * innerWidth, y: innerHeight * (.1 + Math.random() * .65), vx: -.1 + Math.random() * .2, vy: -.06 - Math.random() * .12, size: .5 + Math.random() * 1.5, alpha: .1 + Math.random() * .25 };
 }

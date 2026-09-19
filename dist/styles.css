@@ -75,7 +75,7 @@ body.mood-romantic .device > img { filter:brightness(.48) saturate(.62) hue-rota
   mix-blend-mode: screen;
   transition: opacity 170ms ease-out, transform 190ms ease-out, filter 190ms ease-out, background .22s ease, box-shadow .22s ease;
 }
-.scene.playing .window-light.lit { opacity: var(--light, .98); transform: scale(1); filter: brightness(1.22); }
+.scene.playing .window-light.lit { opacity: 1; transform: scale(1); filter: brightness(1.35) saturate(1.18); }
 .scene.playing .window-light.hit { animation: windowBeat 380ms cubic-bezier(.16,.86,.25,1); }
 body.mood-calm .scene.playing .window-light.lit,
 body.mood-romantic .scene.playing .window-light.lit {
@@ -85,8 +85,8 @@ body.mood-romantic .scene.playing .window-light.lit {
 }
 body.mood-calm .scene.playing .window-light.hit,
 body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatNight; }
-@keyframes windowBeat { 0%{transform:scale(.78);filter:brightness(.75)} 35%{transform:scale(1.18);filter:brightness(1.8)} 100%{transform:scale(1);filter:brightness(1.18)} }
-@keyframes windowBeatNight { 0%{transform:scale(.78);filter:brightness(2.1)} 35%{transform:scale(1.18);filter:brightness(4.35)} 100%{transform:scale(1);filter:brightness(3.1)} }
+@keyframes windowBeat { 0%{transform:scale(.92);filter:brightness(1.35) saturate(1.18)} 35%{transform:scale(1.08);filter:brightness(1.35) saturate(1.18)} 100%{transform:scale(1);filter:brightness(1.35) saturate(1.18)} }
+@keyframes windowBeatNight { 0%{transform:scale(.92);filter:brightness(3.1) saturate(1.42)} 35%{transform:scale(1.08);filter:brightness(3.1) saturate(1.42)} 100%{transform:scale(1);filter:brightness(3.1) saturate(1.42)} }
 
 #weather { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 

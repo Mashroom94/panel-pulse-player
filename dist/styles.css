@@ -25,9 +25,9 @@ button { font: inherit; color: inherit; }
   position: absolute;
   z-index: -4;
   left: 50%;
-  top: 51%;
-  width: max(102vw, 181.4vh);
-  height: max(57.4vw, 102vh);
+  top: 54%;
+  width: max(108vw, 192vh);
+  height: max(60.75vw, 108vh);
   transform: translate(-50%, -50%);
   transition: filter 1.4s ease;
 }
@@ -52,6 +52,9 @@ body.mood-romantic .scene-art { filter: brightness(.42) saturate(.74) contrast(1
 body.mood-romantic .scene { background:linear-gradient(#111d36, #1e1730); }
 body.mood-romantic .atmosphere { background:linear-gradient(180deg, rgba(8,18,48,.76), rgba(29,20,54,.4)); }
 
+body.mood-calm .device > img { filter:brightness(.45) saturate(.56) hue-rotate(7deg) contrast(1.06); }
+body.mood-romantic .device > img { filter:brightness(.48) saturate(.62) hue-rotate(8deg) contrast(1.07); }
+
 .window-field {
   position: absolute;
   inset: 0;
@@ -74,7 +77,16 @@ body.mood-romantic .atmosphere { background:linear-gradient(180deg, rgba(8,18,48
 }
 .scene.playing .window-light.lit { opacity: var(--light, .98); transform: scale(1); filter: brightness(1.22); }
 .scene.playing .window-light.hit { animation: windowBeat 380ms cubic-bezier(.16,.86,.25,1); }
+body.mood-calm .scene.playing .window-light.lit,
+body.mood-romantic .scene.playing .window-light.lit {
+  opacity: 1;
+  filter: brightness(3.1) saturate(1.42);
+  box-shadow: 0 0 9px 3px rgba(var(--window-rgb), 1), 0 0 30px 9px rgba(var(--window-rgb), .52);
+}
+body.mood-calm .scene.playing .window-light.hit,
+body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatNight; }
 @keyframes windowBeat { 0%{transform:scale(.78);filter:brightness(.75)} 35%{transform:scale(1.18);filter:brightness(1.8)} 100%{transform:scale(1);filter:brightness(1.18)} }
+@keyframes windowBeatNight { 0%{transform:scale(.78);filter:brightness(2.1)} 35%{transform:scale(1.18);filter:brightness(4.35)} 100%{transform:scale(1);filter:brightness(3.1)} }
 
 #weather { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 
@@ -90,10 +102,29 @@ body.mood-romantic .atmosphere { background:linear-gradient(180deg, rgba(8,18,48
 }
 .device { position: relative; width: 100%; height: 100%; pointer-events: auto; filter:drop-shadow(0 22px 26px rgba(0,0,0,.46)); transform-origin: bottom center; animation: settle .8s cubic-bezier(.18,.8,.25,1) both; }
 @keyframes settle { from{transform:translateY(7%) scale(.98)} to{transform:none} }
-.device > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; user-select: none; pointer-events: none; filter:brightness(.62) saturate(.68) hue-rotate(5deg); }
+.device > img { position: absolute; z-index:0; inset: 0; width: 100%; height: 100%; object-fit: contain; user-select: none; pointer-events: none; filter:brightness(.62) saturate(.68) hue-rotate(5deg); transition:filter 1.2s ease; }
+.device::before {
+  content:"";
+  position:absolute;
+  z-index:1;
+  left:20%;
+  top:47%;
+  width:60%;
+  height:24%;
+  border-radius:7% 7% 16% 16%;
+  pointer-events:none;
+  opacity:.26;
+  mix-blend-mode:soft-light;
+  background:
+    linear-gradient(104deg, transparent 0 17%, rgba(229,238,241,.42) 17.25% 17.55%, transparent 17.8% 66%, rgba(230,237,238,.3) 66.2% 66.5%, transparent 66.8%),
+    linear-gradient(82deg, transparent 0 43%, rgba(12,17,20,.6) 43.2% 43.65%, transparent 43.9% 76%, rgba(236,241,241,.24) 76.15% 76.4%, transparent 76.7%),
+    radial-gradient(ellipse at 24% 72%, rgba(6,9,11,.46), transparent 18%),
+    radial-gradient(ellipse at 78% 28%, rgba(235,240,240,.18), transparent 14%);
+}
 
 .device-screen {
   position: absolute;
+  z-index: 2;
   left: 20.5%;
   top: 17.7%;
   width: 59%;
@@ -142,7 +173,7 @@ body.mood-romantic .atmosphere { background:linear-gradient(180deg, rgba(8,18,48
 .track-item.current .track-choice::after { content:"•"; margin-left:auto; color:var(--window); }
 .all-hint { position:absolute; left:5.1%; right:5.1%; bottom:3%; text-align:center; font-size:clamp(5px,.57vh,7px); letter-spacing:.07em; opacity:.58; }
 
-.wheel { position:absolute; left:34.2%; top:48.7%; width:31.6%; height:21.1%; border-radius:50%; }
+.wheel { position:absolute; z-index:2; left:34.2%; top:48.7%; width:31.6%; height:21.1%; border-radius:50%; }
 .wheel-btn { position:absolute; appearance:none; border:0; background:transparent; text-shadow:0 1px 2px #000, 0 0 8px #000; font-weight:800; cursor:pointer; opacity:.82; padding:0; touch-action:manipulation; }
 .wheel-btn:hover, .wheel-btn:focus-visible { color:var(--window); outline:none; opacity:1; filter:drop-shadow(0 0 5px var(--window)); }
 .wheel-vol-up { left:34%; top:1%; width:32%; height:24%; font-size:clamp(17px,2.3vh,25px); }
@@ -162,13 +193,13 @@ body[data-color="yellow"] { --window:#ffe44f; --window-rgb:255,228,79; }
 body[data-color="orange"] { --window:#ff7b32; --window-rgb:255,123,50; }
 
 @media (max-width: 1024px) {
-  .scene-art { top:53%; width:max(106vw, 188.5vh); height:max(59.7vw, 106vh); }
+  .scene-art { top:56%; width:max(112vw, 199.1vh); height:max(63vw, 112vh); }
   .device-zone { height:min(70vh, 104vw, 680px); bottom:-21vh; }
 }
 
 @media (max-width: 600px) {
   .scene { min-height:500px; }
-  .scene-art { top:56%; width:max(112vw, 199vh); height:max(63vw, 112vh); }
+  .scene-art { top:59%; width:max(118vw, 209.8vh); height:max(66.4vw, 118vh); }
   .device-zone { height:min(66vh, 116vw); bottom:-18vh; }
   .device-screen { padding-top:5.2%; }
   .screen-title-row { margin-top:3.6%; }
@@ -176,7 +207,7 @@ body[data-color="orange"] { --window:#ff7b32; --window-rgb:255,123,50; }
 }
 
 @media (max-height: 620px) and (orientation: landscape) {
-  .scene-art { top:50%; }
+  .scene-art { top:53%; }
   .device-zone { height:80vh; bottom:-31vh; }
 }
 

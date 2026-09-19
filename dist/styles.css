@@ -144,7 +144,9 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 .all-button span { color:var(--window); font-size:1.25em; line-height:.6; }
 #allClose, #uploadButton { min-width:24px; min-height:20px; padding:0; border:0; background:transparent; }
 #allClose { text-align:left; }
-#uploadButton { color:#fff; font-size:clamp(13px,1.55vh,18px); line-height:1; text-align:right; }
+#uploadButton { display:flex; align-items:center; justify-content:center; min-width:25px; min-height:23px; color:#fff; border:1px solid rgba(var(--window-rgb),.85); border-radius:3px; background:rgba(var(--window-rgb),.14); text-align:center; }
+#uploadButton svg { width:clamp(19px,2.35vh,26px); height:auto; overflow:visible; fill:currentColor; filter:drop-shadow(0 0 4px rgba(var(--window-rgb),.7)); }
+#uploadButton .upload-plus { fill:none; stroke:var(--window); stroke-width:2.4; stroke-linecap:round; }
 .all-button:focus-visible, #allClose:focus-visible, #uploadButton:focus-visible { outline:1px solid var(--window); outline-offset:2px; }
 .screen-title-row { display:flex; align-items:flex-end; justify-content:space-between; gap:5%; margin-top:3.5%; }
 .screen-title { min-width:0; font-size:clamp(10px,1.36vh,14px); line-height:1.08; font-weight:800; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }

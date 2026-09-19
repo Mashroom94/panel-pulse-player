@@ -57,7 +57,12 @@
           <div class="all-screen" id="allScreen" hidden>
             <div class="all-actions">
               <button id="allClose" type="button" aria-label="Вернуться к текущему треку">BACK</button>
-              <button id="uploadButton" type="button" aria-label="Добавить треки с компьютера">＋</button>
+              <button id="uploadButton" type="button" aria-label="Добавить треки с компьютера" title="Добавить свои треки">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M14 4v11.2a3.6 3.6 0 1 1-2-3.22V7.1l8-1.7v8.8a3.6 3.6 0 1 1-2-3.22V3.1L14 4Z"/>
+                  <path class="upload-plus" d="M5 3v6M2 6h6"/>
+                </svg>
+              </button>
               <input id="trackUpload" type="file" accept="audio/*" multiple hidden>
             </div>
             <h2 class="all-title">ALL TRACKS</h2>

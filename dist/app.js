@@ -1,3 +1,5 @@
+import { clampVolume, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
+
 const tracks = [
   { title: 'In Confusion', file: 'audio/in-confusion.mp3', mood: 'sad' },
   { title: 'Lost In The Mall', file: 'audio/lost-in-the-mall.mp3', mood: 'calm' },
@@ -8,10 +10,10 @@ const tracks = [
 ];
 
 const moodMeta = {
-  sad: { short: 'RAIN', label: 'ВЕЧЕР · ДОЖДЬ', weather: 'rain' },
-  calm: { short: 'CLEAR', label: 'НОЧЬ · ЯСНО', weather: 'clear' },
-  happy: { short: 'SUN', label: 'ДЕНЬ · СОЛНЦЕ', weather: 'clear' },
-  romantic: { short: 'STARS', label: 'ЗВЁЗДНАЯ НОЧЬ', weather: 'stars' }
+  sad: { label: 'ВЕЧЕР · ДОЖДЬ', weather: 'rain' },
+  calm: { label: 'НОЧЬ · ЯСНО', weather: 'clear' },
+  happy: { label: 'ДЕНЬ · СОЛНЦЕ', weather: 'clear' },
+  romantic: { label: 'ЗВЁЗДНАЯ НОЧЬ', weather: 'stars' }
 };
 
 const audio = document.querySelector('#audio');
@@ -19,7 +21,6 @@ const scene = document.querySelector('.scene');
 const playButton = document.querySelector('#play');
 const screenTitle = document.querySelector('#screenTitle');
 const screenIndex = document.querySelector('#screenIndex');
-const screenMood = document.querySelector('#screenMood');
 const weatherLabel = document.querySelector('#weatherLabel');
 const volumeText = document.querySelector('#volumeText');
 const elapsed = document.querySelector('#elapsed');
@@ -30,6 +31,8 @@ const nowScreen = document.querySelector('#nowScreen');
 const allScreen = document.querySelector('#allScreen');
 const allButton = document.querySelector('#allButton');
 const allClose = document.querySelector('#allClose');
+const uploadButton = document.querySelector('#uploadButton');
+const trackUpload = document.querySelector('#trackUpload');
 const trackList = document.querySelector('#trackList');
 const equalizer = document.querySelector('#equalizer');
 const windowField = document.querySelector('#windowField');
@@ -50,6 +53,7 @@ let particles = [];
 let weatherMode = moodMeta[currentMood].weather;
 let screenMode = 'now';
 let pendingTrack = 0;
+const customTrackUrls = [];
 
 const eqBars = Array.from({ length: 18 }, () => {
   const bar = document.createElement('i');
@@ -96,14 +100,13 @@ function setMood(mood) {
   currentMood = mood;
   document.body.classList.remove('mood-sad', 'mood-calm', 'mood-happy', 'mood-romantic');
   document.body.classList.add(`mood-${mood}`);
-  screenMood.textContent = moodMeta[mood].short;
   weatherLabel.textContent = moodMeta[mood].label;
   weatherMode = moodMeta[mood].weather;
   particles = [];
 }
 
 function loadTrack(index, autoplay = false) {
-  current = (index + tracks.length) % tracks.length;
+  current = wrapIndex(index, tracks.length);
   const track = tracks[current];
   audio.src = track.file;
   screenTitle.textContent = track.title.toUpperCase();
@@ -128,7 +131,8 @@ function renderTrackList() {
     button.innerHTML = `<span>${track.title.toUpperCase()}</span>`;
     button.addEventListener('click', () => {
       pendingTrack = index;
-      renderTrackList();
+      showNowPlaying();
+      loadTrack(index, true);
     });
     item.appendChild(button);
     trackList.appendChild(item);
@@ -149,11 +153,6 @@ function showNowPlaying() {
   nowScreen.hidden = false;
   allScreen.hidden = true;
   scene.classList.remove('browsing');
-}
-
-function moveTrackSelection(step) {
-  pendingTrack = (pendingTrack + step + tracks.length) % tracks.length;
-  renderTrackList();
 }
 
 function initAudioGraph() {
@@ -185,7 +184,7 @@ function togglePlay() {
 }
 
 function setVolume(value) {
-  audio.volume = Math.max(0, Math.min(1, value));
+  audio.volume = clampVolume(value);
   volumeText.textContent = Math.round(audio.volume * 100);
 }
 
@@ -253,15 +252,16 @@ function resizeCanvas() {
   particles = [];
 }
 
-function makeParticle() {
-  if (weatherMode === 'rain') return { x: Math.random() * innerWidth, y: -30, vx: -1.8 - Math.random() * 1.2, vy: 12 + Math.random() * 10, size: 10 + Math.random() * 18, alpha: .18 + Math.random() * .3 };
-  return { x: Math.random() * innerWidth, y: Math.random() * innerHeight * .105, vx: 0, vy: 0, size: .35 + Math.random() * .85, alpha: .24 + Math.random() * .58, phase: Math.random() * Math.PI * 2, twinkle: .0007 + Math.random() * .0012 };
+function makeParticle(initial = true) {
+  if (weatherMode === 'rain') return { x: Math.random() * innerWidth, y: weatherSpawnY({ height: innerHeight, initial }), vx: -1.8 - Math.random() * 1.2, vy: 12 + Math.random() * 10, size: 10 + Math.random() * 18, alpha: .18 + Math.random() * .3 };
+  const skyHeight = innerWidth <= 600 ? innerHeight * .62 : innerHeight * .34;
+  return { x: Math.random() * innerWidth, y: Math.random() * skyHeight, vx: 0, vy: 0, size: .35 + Math.random() * .85, alpha: .24 + Math.random() * .58, phase: Math.random() * Math.PI * 2, twinkle: .0007 + Math.random() * .0012 };
 }
 
 function drawWeather(now) {
   ctx.clearRect(0, 0, innerWidth, innerHeight);
   const target = audio.paused ? 0 : weatherMode === 'rain' ? 170 : weatherMode === 'stars' ? 105 : 0;
-  while (particles.length < target) particles.push(makeParticle());
+  while (particles.length < target) particles.push(makeParticle(true));
   if (particles.length > target) particles.length = target;
 
   for (let i = particles.length - 1; i >= 0; i -= 1) {
@@ -278,7 +278,7 @@ function drawWeather(now) {
     } else {
       continue;
     }
-    if (p.y > innerHeight + 35 || p.y < -50 || p.x < -50 || p.x > innerWidth + 50) particles[i] = makeParticle();
+    if (p.y > innerHeight + 35 || p.y < -50 || p.x < -50 || p.x > innerWidth + 50) particles[i] = makeParticle(false);
   }
 }
 
@@ -310,10 +310,21 @@ audio.addEventListener('error', () => { weatherLabel.textContent = 'ТРЕК Н�
 playButton.addEventListener('click', togglePlay);
 document.querySelector('#prev').addEventListener('click', () => { if (screenMode === 'now') loadTrack(current - 1, true); });
 document.querySelector('#next').addEventListener('click', () => { if (screenMode === 'now') loadTrack(current + 1, true); });
-document.querySelector('#volUp').addEventListener('click', () => screenMode === 'all' ? moveTrackSelection(-1) : setVolume(audio.volume + .08));
-document.querySelector('#volDown').addEventListener('click', () => screenMode === 'all' ? moveTrackSelection(1) : setVolume(audio.volume - .08));
+document.querySelector('#volUp').addEventListener('click', () => setVolume(audio.volume + .08));
+document.querySelector('#volDown').addEventListener('click', () => setVolume(audio.volume - .08));
 allButton.addEventListener('click', showAllTracks);
 allClose.addEventListener('click', showNowPlaying);
+uploadButton.addEventListener('click', () => trackUpload.click());
+trackUpload.addEventListener('change', () => {
+  const files = Array.from(trackUpload.files || []).filter(file => file.type.startsWith('audio/'));
+  files.forEach(file => {
+    const url = URL.createObjectURL(file);
+    customTrackUrls.push(url);
+    tracks.push({ title: trackTitleFromFile(file.name), file: url, mood: 'calm', custom: true });
+  });
+  trackUpload.value = '';
+  if (files.length) renderTrackList();
+});
 seek.addEventListener('click', event => {
   if (!audio.duration) return;
   const rect = seek.getBoundingClientRect();
@@ -337,10 +348,11 @@ document.addEventListener('keydown', event => {
   if (event.code === 'Space') { event.preventDefault(); togglePlay(); }
   if (event.code === 'ArrowRight' && screenMode === 'now') loadTrack(current + 1, true);
   if (event.code === 'ArrowLeft' && screenMode === 'now') loadTrack(current - 1, true);
-  if (event.code === 'ArrowUp') screenMode === 'all' ? moveTrackSelection(-1) : setVolume(audio.volume + .05);
-  if (event.code === 'ArrowDown') screenMode === 'all' ? moveTrackSelection(1) : setVolume(audio.volume - .05);
+  if (event.code === 'ArrowUp') setVolume(audio.volume + .05);
+  if (event.code === 'ArrowDown') setVolume(audio.volume - .05);
 });
 window.addEventListener('resize', resizeCanvas);
+window.addEventListener('beforeunload', () => customTrackUrls.forEach(url => URL.revokeObjectURL(url)));
 
 setVolume(.78);
 loadTrack(0);

@@ -1,0 +1,11 @@
+{
+  "name": "panel-pulse-player",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-isolation=none"
+  },
+  "dependencies": {
+    "three": "0.186.0"
+  }
+}

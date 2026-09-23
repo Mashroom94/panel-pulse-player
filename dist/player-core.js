@@ -37,3 +37,7 @@ export function rhythmPulse({ now, bpm }) {
   const phase = ((now % beatMs) + beatMs) % beatMs / beatMs;
   return Math.exp(-phase * 6);
 }
+
+export function hasAudioSignal({ energy, bass }) {
+  return energy > 0.008 || bass > 0.008;
+}

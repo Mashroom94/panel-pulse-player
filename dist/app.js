@@ -1,4 +1,4 @@
-import { clampVolume, rhythmPulse, startPlayback, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
+import { clampVolume, hasAudioSignal, rhythmPulse, startPlayback, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
 
 const tracks = [
   { title: 'In Confusion', file: 'audio/in-confusion.mp3', mood: 'sad', bpm: 92 },
@@ -51,6 +51,7 @@ let timeData;
 let smoothBass = 0;
 let lastBeat = 0;
 let lastWindowPulse = 0;
+let lastAudioSignal = 0;
 let particles = [];
 let weatherMode = moodMeta[currentMood].weather;
 let screenMode = 'now';
@@ -114,6 +115,7 @@ function loadTrack(index, autoplay = false) {
   screenTitle.textContent = track.title.toUpperCase();
   screenIndex.textContent = `${String(current + 1).padStart(2, '0')} / ${String(tracks.length).padStart(2, '0')}`;
   smoothBass = 0;
+  lastAudioSignal = 0;
   setMood(track.mood);
   clearWindows();
   renderTrackList();
@@ -235,6 +237,21 @@ function flashWindows(intensity = .5, strong = false) {
   });
 }
 
+function animateFallbackRhythm(now) {
+  const pulse = rhythmPulse({ now, bpm: tracks[current].bpm || 96 });
+  eqBars.forEach((bar, index) => {
+    const wave = .3 + .7 * Math.abs(Math.sin(now * .0042 + index * .72));
+    bar.style.height = `${Math.round(10 + wave * 38 + pulse * (36 + (index % 4) * 4))}%`;
+  });
+  if (pulse > .8 && now - lastBeat > 240) {
+    lastBeat = now;
+    flashWindows(.82, true);
+  } else if (now - lastWindowPulse > 320) {
+    lastWindowPulse = now;
+    flashWindows(.45, false);
+  }
+}
+
 function analyse(now) {
   if (audio.paused) {
     eqBars.forEach(bar => { bar.style.height = '7%'; });
@@ -242,18 +259,7 @@ function analyse(now) {
   }
 
   if (!analyser) {
-    const pulse = rhythmPulse({ now, bpm: tracks[current].bpm || 96 });
-    eqBars.forEach((bar, index) => {
-      const wave = .3 + .7 * Math.abs(Math.sin(now * .0042 + index * .72));
-      bar.style.height = `${Math.round(10 + wave * 38 + pulse * (36 + (index % 4) * 4))}%`;
-    });
-    if (pulse > .8 && now - lastBeat > 240) {
-      lastBeat = now;
-      flashWindows(.82, true);
-    } else if (now - lastWindowPulse > 320) {
-      lastWindowPulse = now;
-      flashWindows(.45, false);
-    }
+    animateFallbackRhythm(now);
     return;
   }
 
@@ -269,6 +275,11 @@ function analyse(now) {
   }
   const energy = Math.sqrt(squareSum / timeData.length);
   const bass = bassSum / Math.max(1, bassEnd * 255);
+  if (hasAudioSignal({ energy, bass })) lastAudioSignal = now;
+  if (!lastAudioSignal || now - lastAudioSignal > 700) {
+    animateFallbackRhythm(now);
+    return;
+  }
   smoothBass = smoothBass * .9 + bass * .1;
   const beat = bass > smoothBass * 1.22 && bass > .14 && now - lastBeat > 180;
 

@@ -56,11 +56,16 @@
           </div>
           <div class="all-screen" id="allScreen" hidden>
             <div class="all-actions">
-              <button id="allClose" type="button" aria-label="Вернуться к текущему треку">BACK</button>
+              <button id="allClose" type="button" aria-label="Вернуться к текущему треку">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M9 4 3 10l6 6M3.5 10H17"/></svg>
+                <span>BACK</span>
+              </button>
               <button id="uploadButton" type="button" aria-label="Добавить треки с компьютера" title="Добавить свои треки">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M14 4v11.2a3.6 3.6 0 1 1-2-3.22V7.1l8-1.7v8.8a3.6 3.6 0 1 1-2-3.22V3.1L14 4Z"/>
-                  <path class="upload-plus" d="M5 3v6M2 6h6"/>
+                  <path class="upload-note" d="M12.5 5.5v10.2m0-7.4L19 6.7v7.8M12.5 8.3 19 6.7"/>
+                  <circle class="upload-note" cx="10.1" cy="16.9" r="2.3"/>
+                  <circle class="upload-note" cx="16.6" cy="15.7" r="2.3"/>
+                  <path class="upload-plus" d="M5 3.5v6M2 6.5h6"/>
                 </svg>
               </button>
               <input id="trackUpload" type="file" accept="audio/*" multiple hidden>
@@ -74,7 +79,10 @@
         <div class="wheel" aria-label="Управление плеером">
           <button class="wheel-btn wheel-vol-up" id="volUp" aria-label="Увеличить громкость">＋</button>
           <button class="wheel-btn wheel-prev" id="prev" aria-label="Предыдущий трек"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M19 5 8 12l11 7V5Z"/></svg></button>
-          <button class="wheel-btn wheel-play" id="play" aria-label="Воспроизвести или поставить на паузу"><span class="play-mark" aria-hidden="true">▶</span><span class="pause-mark" aria-hidden="true"><i></i><i></i></span></button>
+          <button class="wheel-btn wheel-play" id="play" aria-label="Воспроизвести или поставить на паузу">
+            <span class="play-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5 18.5 12 8 18.5Z"/></svg></span>
+            <span class="pause-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7.5 5.5h3.2v13H7.5zM13.3 5.5h3.2v13h-3.2z"/></svg></span>
+          </button>
           <button class="wheel-btn wheel-next" id="next" aria-label="Следующий трек"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M5 5l11 7-11 7V5Z"/></svg></button>
           <button class="wheel-btn wheel-vol-down" id="volDown" aria-label="Уменьшить громкость">−</button>
         </div>

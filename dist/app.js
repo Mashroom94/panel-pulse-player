@@ -253,14 +253,14 @@ function resizeCanvas() {
 }
 
 function makeParticle(initial = true) {
-  if (weatherMode === 'rain') return { x: Math.random() * innerWidth, y: weatherSpawnY({ height: innerHeight, initial }), vx: -1.8 - Math.random() * 1.2, vy: 12 + Math.random() * 10, size: 10 + Math.random() * 18, alpha: .18 + Math.random() * .3 };
-  const skyHeight = innerWidth <= 600 ? innerHeight * .62 : innerHeight * .34;
+  if (weatherMode === 'rain') return { x: Math.random() * (innerWidth + 40) - 20, y: weatherSpawnY({ height: innerHeight, initial }), vx: -.55 - Math.random() * 1.1, vy: 12 + Math.random() * 10, size: 14 + Math.random() * 20, alpha: .3 + Math.random() * .36 };
+  const skyHeight = Math.max(42, innerHeight * .12);
   return { x: Math.random() * innerWidth, y: Math.random() * skyHeight, vx: 0, vy: 0, size: .35 + Math.random() * .85, alpha: .24 + Math.random() * .58, phase: Math.random() * Math.PI * 2, twinkle: .0007 + Math.random() * .0012 };
 }
 
 function drawWeather(now) {
   ctx.clearRect(0, 0, innerWidth, innerHeight);
-  const target = audio.paused ? 0 : weatherMode === 'rain' ? 170 : weatherMode === 'stars' ? 105 : 0;
+  const target = audio.paused ? 0 : weatherMode === 'rain' ? (innerWidth <= 600 ? 240 : 180) : weatherMode === 'stars' ? 60 : 0;
   while (particles.length < target) particles.push(makeParticle(true));
   if (particles.length > target) particles.length = target;
 
@@ -269,7 +269,7 @@ function drawWeather(now) {
     if (weatherMode === 'rain') {
       p.x += p.vx; p.y += p.vy;
       ctx.strokeStyle = `rgba(184,213,236,${p.alpha})`;
-      ctx.lineWidth = .7;
+      ctx.lineWidth = .9;
       ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.vx, p.y + p.size); ctx.stroke();
     } else if (weatherMode === 'stars') {
       const shimmer = .58 + Math.sin(now * p.twinkle + p.phase) * .34;

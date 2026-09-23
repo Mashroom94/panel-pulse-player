@@ -7,14 +7,15 @@
 }
 
 * { box-sizing: border-box; }
-html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #0a1720; }
+html, body { width: 100%; height: 100%; min-height: 100vh; margin: 0; overflow: hidden; background: #0a1720; }
 body { color: var(--ink); }
 button { font: inherit; color: inherit; }
 
 .scene {
   position: relative;
   width: 100vw;
-  height: 100dvh;
+  height: 100vh;
+  min-height: 100dvh;
   min-height: 520px;
   overflow: hidden;
   isolation: isolate;
@@ -88,7 +89,7 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 @keyframes windowBeat { 0%{transform:scale(.92);filter:brightness(1.35) saturate(1.18)} 35%{transform:scale(1.08);filter:brightness(1.35) saturate(1.18)} 100%{transform:scale(1);filter:brightness(1.35) saturate(1.18)} }
 @keyframes windowBeatNight { 0%{transform:scale(.92);filter:brightness(3.1) saturate(1.42)} 35%{transform:scale(1.08);filter:brightness(3.1) saturate(1.42)} 100%{transform:scale(1);filter:brightness(3.1) saturate(1.42)} }
 
-#weather { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#weather { position: fixed; z-index: -2; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 
 .device-zone {
   position: absolute;
@@ -143,10 +144,12 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 .all-button { padding:2px 5px; border:1px solid var(--window); border-radius:2px; background:rgba(var(--window-rgb),.16); color:#fff; opacity:1; font-size:1.05em; }
 .all-button span { color:var(--window); font-size:1.25em; line-height:.6; }
 #allClose, #uploadButton { min-width:24px; min-height:20px; padding:0; border:0; background:transparent; }
-#allClose { text-align:left; }
+#allClose { display:flex; align-items:center; gap:3px; text-align:left; }
+#allClose svg { width:clamp(8px,1vh,11px); height:auto; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
 #uploadButton { display:flex; align-items:center; justify-content:center; min-width:25px; min-height:23px; color:#fff; border:1px solid rgba(var(--window-rgb),.85); border-radius:3px; background:rgba(var(--window-rgb),.14); text-align:center; }
-#uploadButton svg { width:clamp(19px,2.35vh,26px); height:auto; overflow:visible; fill:currentColor; filter:drop-shadow(0 0 4px rgba(var(--window-rgb),.7)); }
-#uploadButton .upload-plus { fill:none; stroke:var(--window); stroke-width:2.4; stroke-linecap:round; }
+#uploadButton svg { width:clamp(19px,2.35vh,26px); height:auto; overflow:visible; fill:none; filter:drop-shadow(0 0 4px rgba(var(--window-rgb),.7)); }
+#uploadButton .upload-note { fill:none; stroke:currentColor; stroke-width:1.35; stroke-linecap:round; stroke-linejoin:round; }
+#uploadButton .upload-plus { fill:none; stroke:var(--window); stroke-width:1.65; stroke-linecap:round; }
 .all-button:focus-visible, #allClose:focus-visible, #uploadButton:focus-visible { outline:1px solid var(--window); outline-offset:2px; }
 .screen-title-row { display:flex; align-items:flex-end; justify-content:space-between; gap:5%; margin-top:3.5%; }
 .screen-title { min-width:0; font-size:clamp(10px,1.36vh,14px); line-height:1.08; font-weight:800; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -169,11 +172,11 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 .all-screen[hidden] { display:none; }
 .all-actions { display:flex; align-items:center; justify-content:space-between; font-size:clamp(7px,.85vh,10px); font-weight:800; letter-spacing:.11em; }
 .all-title { margin:4% 0 0; font-size:clamp(8px,1.05vh,12px); line-height:1; letter-spacing:.12em; }
-.track-list { list-style:none; padding:0 2px 0 0; margin:3% 0 0; height:63%; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--window) transparent; display:flex; flex-direction:column; gap:1%; counter-reset:tracks; }
+.track-list { list-style:none; padding:0; margin:3% 0 0; height:63%; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#fff transparent; display:flex; flex-direction:column; gap:1%; counter-reset:tracks; }
 .track-list::-webkit-scrollbar { width:2px; }
-.track-list::-webkit-scrollbar-thumb { background:var(--window); }
+.track-list::-webkit-scrollbar-thumb { background:#fff; border-radius:2px; }
 .track-item { min-width:0; }
-.track-choice { width:100%; display:flex; align-items:center; gap:4%; min-height:18px; padding:1.8% 3%; border:0; background:transparent; color:rgba(217,239,255,.66); text-align:left; cursor:pointer; touch-action:manipulation; }
+.track-choice { width:calc(100% - 7px); display:flex; align-items:center; gap:4%; min-height:18px; padding:1.8% 3%; border:0; background:transparent; color:rgba(217,239,255,.66); text-align:left; cursor:pointer; touch-action:manipulation; }
 .track-choice::before { counter-increment:tracks; content:counter(tracks, decimal-leading-zero); flex:none; color:rgba(217,239,255,.35); font-size:clamp(5px,.56vh,7px); }
 .track-choice span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:clamp(6px,.7vh,8px); letter-spacing:.04em; }
 .track-item.selected .track-choice { color:#fff; background:rgba(var(--window-rgb),.15); outline:1px solid var(--window); }
@@ -187,11 +190,11 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 .wheel-vol-down { left:32%; bottom:4%; width:36%; height:24%; display:flex; align-items:center; justify-content:center; font-size:clamp(18px,2.4vh,27px); }
 .wheel-prev { left:2%; top:34%; width:28%; height:32%; font-size:clamp(8px,1.05vh,12px); }
 .wheel-next { right:2%; top:34%; width:28%; height:32%; font-size:clamp(8px,1.05vh,12px); }
-.wheel-play { left:35%; top:35%; width:30%; aspect-ratio:1; border-radius:50%; font-size:clamp(11px,1.45vh,16px); display:flex; align-items:center; justify-content:center; }
+.wheel-play { left:35%; top:35%; width:30%; aspect-ratio:1; border-radius:50%; color:var(--ink); display:flex; align-items:center; justify-content:center; }
 .wheel-prev svg, .wheel-next svg { width:clamp(13px,1.7vh,19px); height:auto; fill:currentColor; filter:drop-shadow(0 1px 2px #000); }
-.play-mark { display:block; transform:translateX(7%); }
-.pause-mark { display:none; align-items:center; justify-content:center; gap:2px; }
-.pause-mark i { display:block; width:3px; height:11px; border-radius:1px; background:currentColor; }
+.play-mark { display:block; width:clamp(14px,1.8vh,20px); height:clamp(14px,1.8vh,20px); transform:translateX(5%); }
+.pause-mark { display:none; width:clamp(14px,1.8vh,20px); height:clamp(14px,1.8vh,20px); }
+.play-mark svg, .pause-mark svg { display:block; width:100%; height:100%; fill:currentColor; filter:drop-shadow(0 1px 2px #000); }
 .scene.playing:not(.browsing) .play-mark { display:none; }
 .scene.playing:not(.browsing) .pause-mark { display:flex; }
 
@@ -206,16 +209,18 @@ body[data-color="orange"] { --window:#ff7b32; --window-rgb:255,123,50; }
 }
 
 @media (max-width: 600px) {
-  .scene { min-height:500px; }
-  .scene-art { top:59%; width:max(118vw, 209.8vh); height:max(66.4vw, 118vh); }
-  .device-zone { height:min(62vh, 112vw); bottom:-2vh; }
+  .scene { min-height:max(500px, 100vh); }
+  .scene-art { position:fixed; top:0; width:177.78vh; height:100vh; transform:translateX(-50%); }
+  .device-zone { position:fixed; height:min(62vh, 112vw); bottom:-12vh; }
   .device-screen { padding-top:5.2%; }
   .screen-title-row { margin-top:3.6%; }
   .equalizer { margin-top:3%; }
+  .color-hint { font-size:clamp(5px,.58vh,7px); letter-spacing:.06em; }
   .wheel-prev, .wheel-next { top:29%; width:39%; height:42%; }
   .wheel-prev { left:-4%; }
   .wheel-next { right:-4%; }
   .wheel-prev svg, .wheel-next svg { width:20px; }
+  .play-mark, .pause-mark { width:18px; height:18px; }
   .wheel-vol-up, .wheel-vol-down { width:42%; height:30%; left:29%; }
   .wheel-vol-up { top:-3%; }
   .wheel-vol-down { bottom:-2%; }

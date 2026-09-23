@@ -31,3 +31,9 @@ export async function startPlayback({ play, resume, contextState }) {
   await playPromise;
   if (resumePromise) await Promise.resolve(resumePromise).catch(() => {});
 }
+
+export function rhythmPulse({ now, bpm }) {
+  const beatMs = 60000 / Math.max(1, bpm);
+  const phase = ((now % beatMs) + beatMs) % beatMs / beatMs;
+  return Math.exp(-phase * 6);
+}

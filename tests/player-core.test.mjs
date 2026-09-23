@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { clampVolume, startPlayback, trackTitleFromFile, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
+import { clampVolume, rhythmPulse, startPlayback, trackTitleFromFile, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
 
 test('wrapIndex cycles through every available track', () => {
   assert.equal(wrapIndex(6, 6), 0);
@@ -47,4 +47,10 @@ test('startPlayback still plays when an audio graph is unavailable', async () =>
     contextState: 'unavailable'
   });
   assert.equal(played, true);
+});
+
+test('rhythmPulse creates a visible beat fallback without changing audio routing', () => {
+  assert.equal(rhythmPulse({ now: 0, bpm: 120 }), 1);
+  assert.ok(rhythmPulse({ now: 180, bpm: 120 }) < 0.4);
+  assert.ok(rhythmPulse({ now: 500, bpm: 120 }) > 0.99);
 });

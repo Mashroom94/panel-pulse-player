@@ -1,12 +1,12 @@
-import { clampVolume, startPlayback, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
+import { clampVolume, rhythmPulse, startPlayback, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
 
 const tracks = [
-  { title: 'In Confusion', file: 'audio/in-confusion.mp3', mood: 'sad' },
-  { title: 'Lost In The Mall', file: 'audio/lost-in-the-mall.mp3', mood: 'calm' },
-  { title: 'Neon Lambs', file: 'audio/neon-lambs.mp3', mood: 'happy' },
-  { title: 'Night Shine', file: 'audio/night-shine.mp3', mood: 'romantic' },
-  { title: 'Silver Wires', file: 'audio/silver-wires.mp3', mood: 'calm' },
-  { title: 'Under The Roofs', file: 'audio/under-the-roofs.mp3', mood: 'sad' }
+  { title: 'In Confusion', file: 'audio/in-confusion.mp3', mood: 'sad', bpm: 92 },
+  { title: 'Lost In The Mall', file: 'audio/lost-in-the-mall.mp3', mood: 'calm', bpm: 82 },
+  { title: 'Neon Lambs', file: 'audio/neon-lambs.mp3', mood: 'happy', bpm: 122 },
+  { title: 'Night Shine', file: 'audio/night-shine.mp3', mood: 'romantic', bpm: 74 },
+  { title: 'Silver Wires', file: 'audio/silver-wires.mp3', mood: 'calm', bpm: 88 },
+  { title: 'Under The Roofs', file: 'audio/under-the-roofs.mp3', mood: 'sad', bpm: 96 }
 ];
 
 const moodMeta = {
@@ -44,6 +44,8 @@ let currentMood = tracks[0].mood;
 let audioContext;
 let analyser;
 let source;
+let audioStream;
+let analyserUnavailable = false;
 let freqData;
 let timeData;
 let smoothBass = 0;
@@ -156,23 +158,30 @@ function showNowPlaying() {
 }
 
 function initAudioGraph() {
-  if (audioContext) return;
+  if (audioContext || analyserUnavailable) return;
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass) return;
+  const captureStream = audio.captureStream || audio.mozCaptureStream;
+  if (!AudioContextClass || !captureStream) {
+    analyserUnavailable = true;
+    return;
+  }
 
   try {
+    // Analyse a copy of the stream. The audio element keeps its native output,
+    // so a suspended Web Audio context can never make the music silent.
+    audioStream = captureStream.call(audio);
     audioContext = new AudioContextClass();
     analyser = audioContext.createAnalyser();
     analyser.fftSize = 1024;
     analyser.smoothingTimeConstant = .7;
-    source = audioContext.createMediaElementSource(audio);
+    source = audioContext.createMediaStreamSource(audioStream);
     source.connect(analyser);
-    analyser.connect(audioContext.destination);
     freqData = new Uint8Array(analyser.frequencyBinCount);
     timeData = new Uint8Array(analyser.fftSize);
   } catch (error) {
     audioContext = null;
     analyser = null;
+    analyserUnavailable = true;
     console.warn('Audio visualizer is unavailable', error);
   }
 }
@@ -227,8 +236,24 @@ function flashWindows(intensity = .5, strong = false) {
 }
 
 function analyse(now) {
-  if (!analyser || audio.paused) {
+  if (audio.paused) {
     eqBars.forEach(bar => { bar.style.height = '7%'; });
+    return;
+  }
+
+  if (!analyser) {
+    const pulse = rhythmPulse({ now, bpm: tracks[current].bpm || 96 });
+    eqBars.forEach((bar, index) => {
+      const wave = .3 + .7 * Math.abs(Math.sin(now * .0042 + index * .72));
+      bar.style.height = `${Math.round(10 + wave * 38 + pulse * (36 + (index % 4) * 4))}%`;
+    });
+    if (pulse > .8 && now - lastBeat > 240) {
+      lastBeat = now;
+      flashWindows(.82, true);
+    } else if (now - lastWindowPulse > 320) {
+      lastWindowPulse = now;
+      flashWindows(.45, false);
+    }
     return;
   }
 

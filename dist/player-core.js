@@ -14,3 +14,20 @@ export function trackTitleFromFile(filename) {
 export function weatherSpawnY({ height, initial, random = Math.random() }) {
   return initial ? random * height : -30;
 }
+
+export async function startPlayback({ play, resume, contextState }) {
+  // Start both operations during the original user gesture. Awaiting resume()
+  // before play() can make mobile browsers reject playback as autoplay.
+  const playPromise = play();
+  let resumePromise;
+  if (contextState === 'suspended' && typeof resume === 'function') {
+    try {
+      resumePromise = resume();
+    } catch {
+      // The analyser is optional; native audio playback must keep working.
+    }
+  }
+
+  await playPromise;
+  if (resumePromise) await Promise.resolve(resumePromise).catch(() => {});
+}

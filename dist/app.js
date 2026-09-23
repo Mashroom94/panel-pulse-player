@@ -1,4 +1,4 @@
-import { clampVolume, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
+import { clampVolume, startPlayback, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
 
 const tracks = [
   { title: 'In Confusion', file: 'audio/in-confusion.mp3', mood: 'sad' },
@@ -157,21 +157,40 @@ function showNowPlaying() {
 
 function initAudioGraph() {
   if (audioContext) return;
-  audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  analyser = audioContext.createAnalyser();
-  analyser.fftSize = 1024;
-  analyser.smoothingTimeConstant = .7;
-  source = audioContext.createMediaElementSource(audio);
-  source.connect(analyser);
-  analyser.connect(audioContext.destination);
-  freqData = new Uint8Array(analyser.frequencyBinCount);
-  timeData = new Uint8Array(analyser.fftSize);
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+
+  try {
+    audioContext = new AudioContextClass();
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = .7;
+    source = audioContext.createMediaElementSource(audio);
+    source.connect(analyser);
+    analyser.connect(audioContext.destination);
+    freqData = new Uint8Array(analyser.frequencyBinCount);
+    timeData = new Uint8Array(analyser.fftSize);
+  } catch (error) {
+    audioContext = null;
+    analyser = null;
+    console.warn('Audio visualizer is unavailable', error);
+  }
 }
 
 async function playAudio() {
-  initAudioGraph();
-  if (audioContext.state === 'suspended') await audioContext.resume();
-  try { await audio.play(); } catch (error) { console.warn('Playback needs a tap', error); }
+  try {
+    initAudioGraph();
+    if (typeof audio.play !== 'function') throw new Error('Audio playback is unavailable in this browser');
+    await startPlayback({
+      play: () => audio.play(),
+      resume: audioContext ? () => audioContext.resume() : undefined,
+      contextState: audioContext?.state || 'unavailable'
+    });
+  } catch (error) {
+    scene.classList.remove('playing');
+    playButton.setAttribute('aria-label', 'Воспроизвести');
+    console.warn('Playback could not start', error);
+  }
 }
 
 function togglePlay() {

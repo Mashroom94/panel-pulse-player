@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { clampVolume, trackTitleFromFile, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
+import { clampVolume, startPlayback, trackTitleFromFile, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
 
 test('wrapIndex cycles through every available track', () => {
   assert.equal(wrapIndex(6, 6), 0);
@@ -22,4 +22,29 @@ test('weatherSpawnY fills the visible mobile weather field on first render', () 
   const y = weatherSpawnY({ height: 800, initial: true, random: 0.75 });
   assert.equal(y, 600);
   assert.equal(weatherSpawnY({ height: 800, initial: false, random: 0.75 }), -30);
+});
+
+test('startPlayback starts the media before waiting for the audio graph to resume', async () => {
+  const calls = [];
+  let releaseResume;
+  const resumeGate = new Promise(resolve => { releaseResume = resolve; });
+
+  const pending = startPlayback({
+    play: () => { calls.push('play'); return Promise.resolve(); },
+    resume: () => { calls.push('resume'); return resumeGate; },
+    contextState: 'suspended'
+  });
+
+  assert.deepEqual(calls, ['play', 'resume']);
+  releaseResume();
+  await pending;
+});
+
+test('startPlayback still plays when an audio graph is unavailable', async () => {
+  let played = false;
+  await startPlayback({
+    play: () => { played = true; return Promise.resolve(); },
+    contextState: 'unavailable'
+  });
+  assert.equal(played, true);
 });

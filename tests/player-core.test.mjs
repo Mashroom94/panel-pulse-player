@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
+import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
 
 test('wrapIndex cycles through every available track', () => {
   assert.equal(wrapIndex(6, 6), 0);
@@ -92,4 +92,9 @@ test('analyzePcmFeatures detects tempo and energy from uploaded audio samples', 
   assert.ok(Math.abs(features.bpm - 120) <= 3);
   assert.ok(features.energy > 0);
   assert.ok(features.brightness > 0);
+});
+
+test('formatTrackSummary shows mood and only the total track count', () => {
+  assert.equal(formatTrackSummary('sad', 6), 'SAD · 6');
+  assert.equal(formatTrackSummary('romantic', 12), 'LOVE · 12');
 });

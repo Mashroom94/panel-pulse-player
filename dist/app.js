@@ -1,4 +1,4 @@
-import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
+import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
 
 const tracks = [
   { title: 'In Confusion', file: 'audio/in-confusion.mp3', bpm: 92, energy: .44, brightness: .28 },
@@ -160,12 +160,16 @@ function visibleTrackIndexes() {
   return filterTrackIndexes(tracks, activeFilter, favoriteKeys);
 }
 
+function updateTrackSummary() {
+  screenIndex.textContent = formatTrackSummary(tracks[current].mood, tracks.length);
+}
+
 function loadTrack(index, autoplay = false) {
   current = wrapIndex(index, tracks.length);
   const track = tracks[current];
   audio.src = track.file;
   screenTitle.textContent = track.title.toUpperCase();
-  screenIndex.textContent = `${String(current + 1).padStart(2, '0')} / ${String(tracks.length).padStart(2, '0')}`;
+  updateTrackSummary();
   smoothBass = 0;
   lastAudioSignal = 0;
   setMood(track.mood);
@@ -468,7 +472,10 @@ async function categorizeUploadedTrack(file, track) {
     const buffer = await decoder.decodeAudioData(await file.arrayBuffer());
     const features = analyzePcmFeatures(buffer.getChannelData(0), buffer.sampleRate);
     Object.assign(track, features, { mood: classifyMood(features), analyzing: false });
-    if (tracks[current] === track) setMood(track.mood);
+    if (tracks[current] === track) {
+      setMood(track.mood);
+      updateTrackSummary();
+    }
   } catch {
     track.analyzing = false;
   } finally {
@@ -508,7 +515,10 @@ trackUpload.addEventListener('change', () => {
     void categorizeUploadedTrack(file, track);
   });
   trackUpload.value = '';
-  if (files.length) renderTrackList();
+  if (files.length) {
+    updateTrackSummary();
+    renderTrackList();
+  }
 });
 seek.addEventListener('click', event => {
   if (!audio.duration) return;

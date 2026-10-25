@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { clampVolume, filterTrackIndexes, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
+import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
 
 test('wrapIndex cycles through every available track', () => {
   assert.equal(wrapIndex(6, 6), 0);
@@ -71,4 +71,25 @@ test('filterTrackIndexes builds mood and favorites queues', () => {
   assert.deepEqual(filterTrackIndexes(library, 'all', favorites), [0, 1, 2]);
   assert.deepEqual(filterTrackIndexes(library, 'favorites', favorites), [1, 2]);
   assert.deepEqual(filterTrackIndexes(library, 'sad', favorites), [0]);
+});
+
+test('classifyMood maps audio features to the four weather moods', () => {
+  assert.equal(classifyMood({ bpm: 124, energy: 0.74, brightness: 0.66 }), 'happy');
+  assert.equal(classifyMood({ bpm: 84, energy: 0.27, brightness: 0.35 }), 'calm');
+  assert.equal(classifyMood({ bpm: 92, energy: 0.44, brightness: 0.28 }), 'sad');
+  assert.equal(classifyMood({ bpm: 76, energy: 0.42, brightness: 0.64 }), 'romantic');
+});
+
+test('analyzePcmFeatures detects tempo and energy from uploaded audio samples', () => {
+  const sampleRate = 1000;
+  const samples = new Float32Array(sampleRate * 8);
+  for (let start = 0; start < samples.length; start += 500) {
+    for (let offset = 0; offset < 20 && start + offset < samples.length; offset += 1) {
+      samples[start + offset] = 0.8 * (1 - offset / 20);
+    }
+  }
+  const features = analyzePcmFeatures(samples, sampleRate);
+  assert.ok(Math.abs(features.bpm - 120) <= 3);
+  assert.ok(features.energy > 0);
+  assert.ok(features.brightness > 0);
 });

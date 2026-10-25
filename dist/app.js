@@ -1,19 +1,21 @@
-import { clampVolume, filterTrackIndexes, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
+import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
 
 const tracks = [
-  { title: 'In Confusion', file: 'audio/in-confusion.mp3', mood: 'sad', bpm: 92 },
-  { title: 'Lost In The Mall', file: 'audio/lost-in-the-mall.mp3', mood: 'calm', bpm: 82 },
-  { title: 'Neon Lambs', file: 'audio/neon-lambs.mp3', mood: 'happy', bpm: 122 },
-  { title: 'Night Shine', file: 'audio/night-shine.mp3', mood: 'romantic', bpm: 74 },
-  { title: 'Silver Wires', file: 'audio/silver-wires.mp3', mood: 'calm', bpm: 88 },
-  { title: 'Under The Roofs', file: 'audio/under-the-roofs.mp3', mood: 'sad', bpm: 96 }
+  { title: 'In Confusion', file: 'audio/in-confusion.mp3', bpm: 92, energy: .44, brightness: .28 },
+  { title: 'Lost In The Mall', file: 'audio/lost-in-the-mall.mp3', bpm: 82, energy: .27, brightness: .36 },
+  { title: 'Neon Lambs', file: 'audio/neon-lambs.mp3', bpm: 122, energy: .72, brightness: .69 },
+  { title: 'Night Shine', file: 'audio/night-shine.mp3', bpm: 74, energy: .4, brightness: .63 },
+  { title: 'Silver Wires', file: 'audio/silver-wires.mp3', bpm: 88, energy: .3, brightness: .43 },
+  { title: 'Under The Roofs', file: 'audio/under-the-roofs.mp3', bpm: 96, energy: .46, brightness: .31 }
 ];
 
+tracks.forEach(track => { track.mood = classifyMood(track); });
+
 const moodMeta = {
-  sad: { label: 'ВЕЧЕР · ДОЖДЬ', weather: 'rain' },
-  calm: { label: 'НОЧЬ · ЯСНО', weather: 'clear' },
-  happy: { label: 'ДЕНЬ · СОЛНЦЕ', weather: 'clear' },
-  romantic: { label: 'ЗВЁЗДНАЯ НОЧЬ', weather: 'stars' }
+  sad: { weather: 'rain' },
+  calm: { weather: 'clear' },
+  happy: { weather: 'clear' },
+  romantic: { weather: 'stars' }
 };
 
 const audio = document.querySelector('#audio');
@@ -21,7 +23,6 @@ const scene = document.querySelector('.scene');
 const playButton = document.querySelector('#play');
 const screenTitle = document.querySelector('#screenTitle');
 const screenIndex = document.querySelector('#screenIndex');
-const weatherLabel = document.querySelector('#weatherLabel');
 const volumeText = document.querySelector('#volumeText');
 const elapsed = document.querySelector('#elapsed');
 const duration = document.querySelector('#duration');
@@ -128,7 +129,6 @@ function setMood(mood) {
   currentMood = mood;
   document.body.classList.remove('mood-sad', 'mood-calm', 'mood-happy', 'mood-romantic');
   document.body.classList.add(`mood-${mood}`);
-  weatherLabel.textContent = moodMeta[mood].label;
   weatherMode = moodMeta[mood].weather;
   particles = [];
 }
@@ -452,7 +452,30 @@ audio.addEventListener('timeupdate', () => {
   duration.textContent = formatTime(audio.duration);
   progress.style.width = `${audio.duration ? (audio.currentTime / audio.duration) * 100 : 0}%`;
 });
-audio.addEventListener('error', () => { weatherLabel.textContent = 'ТРЕК НЕДОСТУПЕН'; });
+audio.addEventListener('error', () => {
+  scene.classList.remove('playing');
+  playButton.setAttribute('aria-label', 'Воспроизвести');
+});
+
+async function categorizeUploadedTrack(file, track) {
+  const OfflineContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const RealtimeContext = window.AudioContext || window.webkitAudioContext;
+  if (!OfflineContext && !RealtimeContext) return;
+
+  let decoder;
+  try {
+    decoder = OfflineContext ? new OfflineContext(1, 1, 44100) : new RealtimeContext();
+    const buffer = await decoder.decodeAudioData(await file.arrayBuffer());
+    const features = analyzePcmFeatures(buffer.getChannelData(0), buffer.sampleRate);
+    Object.assign(track, features, { mood: classifyMood(features), analyzing: false });
+    if (tracks[current] === track) setMood(track.mood);
+  } catch {
+    track.analyzing = false;
+  } finally {
+    if (decoder && typeof decoder.close === 'function') await decoder.close().catch(() => {});
+    renderTrackList();
+  }
+}
 
 playButton.addEventListener('click', togglePlay);
 document.querySelector('#prev').addEventListener('click', () => { if (screenMode === 'now') moveTrack(-1, true); });
@@ -471,8 +494,18 @@ trackUpload.addEventListener('change', () => {
   const files = Array.from(trackUpload.files || []).filter(file => file.type.startsWith('audio/'));
   files.forEach(file => {
     const url = URL.createObjectURL(file);
+    const fallbackFeatures = { bpm: 96, energy: .3, brightness: .38 };
+    const track = {
+      title: trackTitleFromFile(file.name),
+      file: url,
+      ...fallbackFeatures,
+      mood: classifyMood(fallbackFeatures),
+      custom: true,
+      analyzing: true
+    };
     customTrackUrls.push(url);
-    tracks.push({ title: trackTitleFromFile(file.name), file: url, mood: 'calm', custom: true });
+    tracks.push(track);
+    void categorizeUploadedTrack(file, track);
   });
   trackUpload.value = '';
   if (files.length) renderTrackList();

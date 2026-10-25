@@ -1,3 +1,4 @@
 site-deploy.tar.gz
 .sites-runtime/
 .source-audio/
+outputs/

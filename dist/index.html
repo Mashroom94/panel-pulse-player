@@ -27,7 +27,12 @@
           <div class="now-screen" id="nowScreen">
             <div class="screen-top">
               <span id="screenIndex">01 / 06</span>
-              <button class="all-button" id="allButton" type="button" aria-label="Открыть все треки">ALL <span aria-hidden="true">›</span></button>
+              <div class="screen-top-actions">
+                <button class="favorite-button" id="favoriteButton" type="button" aria-label="Добавить текущий трек в избранное" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2 4.3 13A5.1 5.1 0 0 1 11.5 5.8l.5.5.5-.5A5.1 5.1 0 0 1 19.7 13Z"/></svg>
+                </button>
+                <button class="all-button" id="allButton" type="button" aria-label="Открыть библиотеку треков">ALL <span aria-hidden="true">›</span></button>
+              </div>
             </div>
             <div class="screen-title-row">
               <div class="screen-title" id="screenTitle">IN CONFUSION</div>
@@ -70,7 +75,15 @@
               </button>
               <input id="trackUpload" type="file" accept="audio/*" multiple hidden>
             </div>
-            <h2 class="all-title">ALL TRACKS</h2>
+            <h2 class="all-title" id="libraryTitle">ALL TRACKS</h2>
+            <div class="library-tabs" id="libraryTabs" role="tablist" aria-label="Фильтр библиотеки">
+              <button type="button" role="tab" data-filter="all" aria-selected="true">ALL</button>
+              <button type="button" role="tab" data-filter="favorites" aria-selected="false">FAV</button>
+              <button type="button" role="tab" data-filter="happy" aria-selected="false">JOY</button>
+              <button type="button" role="tab" data-filter="calm" aria-selected="false">CALM</button>
+              <button type="button" role="tab" data-filter="sad" aria-selected="false">SAD</button>
+              <button type="button" role="tab" data-filter="romantic" aria-selected="false">LOVE</button>
+            </div>
             <ol class="track-list" id="trackList"></ol>
             <div class="all-hint">НАЖМИ НА ТРЕК, ЧТОБЫ СЛУШАТЬ</div>
           </div>

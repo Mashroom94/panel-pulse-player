@@ -41,3 +41,17 @@ export function rhythmPulse({ now, bpm }) {
 export function hasAudioSignal({ energy, bass }) {
   return energy > 0.008 || bass > 0.008;
 }
+
+export function trackKey(track) {
+  return `${track.file || ''}::${track.title || ''}`;
+}
+
+export function filterTrackIndexes(tracks, filter, favorites = new Set()) {
+  return tracks.reduce((indexes, track, index) => {
+    const matches = filter === 'all'
+      || (filter === 'favorites' && favorites.has(trackKey(track)))
+      || track.mood === filter;
+    if (matches) indexes.push(index);
+    return indexes;
+  }, []);
+}

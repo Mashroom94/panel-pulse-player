@@ -1,4 +1,4 @@
-import { clampVolume, hasAudioSignal, rhythmPulse, startPlayback, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
+import { clampVolume, filterTrackIndexes, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
 
 const tracks = [
   { title: 'In Confusion', file: 'audio/in-confusion.mp3', mood: 'sad', bpm: 92 },
@@ -30,10 +30,13 @@ const seek = document.querySelector('#seek');
 const nowScreen = document.querySelector('#nowScreen');
 const allScreen = document.querySelector('#allScreen');
 const allButton = document.querySelector('#allButton');
+const favoriteButton = document.querySelector('#favoriteButton');
 const allClose = document.querySelector('#allClose');
 const uploadButton = document.querySelector('#uploadButton');
 const trackUpload = document.querySelector('#trackUpload');
 const trackList = document.querySelector('#trackList');
+const libraryTitle = document.querySelector('#libraryTitle');
+const libraryTabs = document.querySelector('#libraryTabs');
 const equalizer = document.querySelector('#equalizer');
 const windowField = document.querySelector('#windowField');
 const canvas = document.querySelector('#weather');
@@ -56,7 +59,29 @@ let particles = [];
 let weatherMode = moodMeta[currentMood].weather;
 let screenMode = 'now';
 let pendingTrack = 0;
+let activeFilter = 'all';
 const customTrackUrls = [];
+const favoritesStorageKey = 'panel-pulse-favorites-v1';
+
+const filterMeta = {
+  all: { title: 'ALL TRACKS', empty: 'NO TRACKS' },
+  favorites: { title: 'FAVORITES', empty: 'ADD TRACKS WITH THE HEART' },
+  happy: { title: 'HAPPY', empty: 'NO HAPPY TRACKS' },
+  calm: { title: 'CALM', empty: 'NO CALM TRACKS' },
+  sad: { title: 'SAD', empty: 'NO SAD TRACKS' },
+  romantic: { title: 'ROMANCE', empty: 'NO ROMANTIC TRACKS' }
+};
+
+function readFavorites() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(favoritesStorageKey) || '[]');
+    return new Set(Array.isArray(saved) ? saved.filter(value => typeof value === 'string') : []);
+  } catch {
+    return new Set();
+  }
+}
+
+let favoriteKeys = readFavorites();
 
 const eqBars = Array.from({ length: 18 }, () => {
   const bar = document.createElement('i');
@@ -108,6 +133,33 @@ function setMood(mood) {
   particles = [];
 }
 
+function isFavorite(index) {
+  return favoriteKeys.has(trackKey(tracks[index]));
+}
+
+function saveFavorites() {
+  try { localStorage.setItem(favoritesStorageKey, JSON.stringify([...favoriteKeys])); } catch { /* Session-only fallback. */ }
+}
+
+function updateFavoriteButton() {
+  const active = isFavorite(current);
+  favoriteButton.setAttribute('aria-pressed', String(active));
+  favoriteButton.setAttribute('aria-label', active ? 'Удалить текущий трек из избранного' : 'Добавить текущий трек в избранное');
+  favoriteButton.title = active ? 'Убрать из избранного' : 'Добавить в избранное';
+}
+
+function toggleFavorite(index) {
+  const key = trackKey(tracks[index]);
+  if (favoriteKeys.has(key)) favoriteKeys.delete(key); else favoriteKeys.add(key);
+  saveFavorites();
+  updateFavoriteButton();
+  renderTrackList();
+}
+
+function visibleTrackIndexes() {
+  return filterTrackIndexes(tracks, activeFilter, favoriteKeys);
+}
+
 function loadTrack(index, autoplay = false) {
   current = wrapIndex(index, tracks.length);
   const track = tracks[current];
@@ -117,6 +169,7 @@ function loadTrack(index, autoplay = false) {
   smoothBass = 0;
   lastAudioSignal = 0;
   setMood(track.mood);
+  updateFavoriteButton();
   clearWindows();
   renderTrackList();
   if (autoplay) playAudio();
@@ -124,7 +177,22 @@ function loadTrack(index, autoplay = false) {
 
 function renderTrackList() {
   trackList.innerHTML = '';
-  tracks.forEach((track, index) => {
+  const indexes = visibleTrackIndexes();
+  libraryTitle.textContent = filterMeta[activeFilter].title;
+  libraryTabs.querySelectorAll('[data-filter]').forEach(button => {
+    button.setAttribute('aria-selected', String(button.dataset.filter === activeFilter));
+  });
+
+  if (!indexes.length) {
+    const empty = document.createElement('li');
+    empty.className = 'empty-library';
+    empty.textContent = filterMeta[activeFilter].empty;
+    trackList.appendChild(empty);
+    return;
+  }
+
+  indexes.forEach(index => {
+    const track = tracks[index];
     const item = document.createElement('li');
     item.className = 'track-item';
     item.classList.toggle('selected', index === pendingTrack);
@@ -138,9 +206,34 @@ function renderTrackList() {
       showNowPlaying();
       loadTrack(index, true);
     });
+    const favorite = document.createElement('button');
+    const favoriteActive = isFavorite(index);
+    favorite.className = 'track-favorite';
+    favorite.type = 'button';
+    favorite.setAttribute('aria-pressed', String(favoriteActive));
+    favorite.setAttribute('aria-label', favoriteActive ? `Удалить ${track.title} из избранного` : `Добавить ${track.title} в избранное`);
+    favorite.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2 4.3 13A5.1 5.1 0 0 1 11.5 5.8l.5.5.5-.5A5.1 5.1 0 0 1 19.7 13Z"/></svg>';
+    favorite.addEventListener('click', () => toggleFavorite(index));
     item.appendChild(button);
+    item.appendChild(favorite);
     trackList.appendChild(item);
   });
+}
+
+function setLibraryFilter(filter) {
+  if (!filterMeta[filter]) return;
+  activeFilter = filter;
+  renderTrackList();
+}
+
+function moveTrack(direction, autoplay = true) {
+  const queue = visibleTrackIndexes();
+  const available = queue.length ? queue : filterTrackIndexes(tracks, 'all', favoriteKeys);
+  const position = available.indexOf(current);
+  const nextPosition = position < 0
+    ? (direction > 0 ? 0 : available.length - 1)
+    : wrapIndex(position + direction, available.length);
+  loadTrack(available[nextPosition], autoplay);
 }
 
 function showAllTracks() {
@@ -184,7 +277,6 @@ function initAudioGraph() {
     audioContext = null;
     analyser = null;
     analyserUnavailable = true;
-    console.warn('Audio visualizer is unavailable', error);
   }
 }
 
@@ -353,7 +445,7 @@ audio.addEventListener('pause', () => {
   clearWindows();
   particles = [];
 });
-audio.addEventListener('ended', () => loadTrack(current + 1, true));
+audio.addEventListener('ended', () => moveTrack(1, true));
 audio.addEventListener('loadedmetadata', () => { duration.textContent = formatTime(audio.duration); });
 audio.addEventListener('timeupdate', () => {
   elapsed.textContent = formatTime(audio.currentTime);
@@ -363,12 +455,17 @@ audio.addEventListener('timeupdate', () => {
 audio.addEventListener('error', () => { weatherLabel.textContent = 'ТРЕК НЕДОСТУПЕН'; });
 
 playButton.addEventListener('click', togglePlay);
-document.querySelector('#prev').addEventListener('click', () => { if (screenMode === 'now') loadTrack(current - 1, true); });
-document.querySelector('#next').addEventListener('click', () => { if (screenMode === 'now') loadTrack(current + 1, true); });
+document.querySelector('#prev').addEventListener('click', () => { if (screenMode === 'now') moveTrack(-1, true); });
+document.querySelector('#next').addEventListener('click', () => { if (screenMode === 'now') moveTrack(1, true); });
 document.querySelector('#volUp').addEventListener('click', () => setVolume(audio.volume + .08));
 document.querySelector('#volDown').addEventListener('click', () => setVolume(audio.volume - .08));
 allButton.addEventListener('click', showAllTracks);
+favoriteButton.addEventListener('click', () => toggleFavorite(current));
 allClose.addEventListener('click', showNowPlaying);
+libraryTabs.addEventListener('click', event => {
+  const button = event.target.closest('[data-filter]');
+  if (button) setLibraryFilter(button.dataset.filter);
+});
 uploadButton.addEventListener('click', () => trackUpload.click());
 trackUpload.addEventListener('change', () => {
   const files = Array.from(trackUpload.files || []).filter(file => file.type.startsWith('audio/'));
@@ -401,8 +498,8 @@ document.querySelectorAll('.screen-swatch').forEach(button => {
 
 document.addEventListener('keydown', event => {
   if (event.code === 'Space') { event.preventDefault(); togglePlay(); }
-  if (event.code === 'ArrowRight' && screenMode === 'now') loadTrack(current + 1, true);
-  if (event.code === 'ArrowLeft' && screenMode === 'now') loadTrack(current - 1, true);
+  if (event.code === 'ArrowRight' && screenMode === 'now') moveTrack(1, true);
+  if (event.code === 'ArrowLeft' && screenMode === 'now') moveTrack(-1, true);
   if (event.code === 'ArrowUp') setVolume(audio.volume + .05);
   if (event.code === 'ArrowDown') setVolume(audio.volume - .05);
 });

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { clampVolume, hasAudioSignal, rhythmPulse, startPlayback, trackTitleFromFile, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
+import { clampVolume, filterTrackIndexes, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
 
 test('wrapIndex cycles through every available track', () => {
   assert.equal(wrapIndex(6, 6), 0);
@@ -58,4 +58,17 @@ test('rhythmPulse creates a visible beat fallback without changing audio routing
 test('hasAudioSignal detects browsers that return an empty analyser stream', () => {
   assert.equal(hasAudioSignal({ energy: 0, bass: 0 }), false);
   assert.equal(hasAudioSignal({ energy: 0.012, bass: 0.004 }), true);
+});
+
+test('filterTrackIndexes builds mood and favorites queues', () => {
+  const library = [
+    { title: 'Rain', file: 'rain.mp3', mood: 'sad' },
+    { title: 'Sun', file: 'sun.mp3', mood: 'happy' },
+    { title: 'Night', file: 'night.mp3', mood: 'romantic' }
+  ];
+  const favorites = new Set([trackKey(library[1]), trackKey(library[2])]);
+
+  assert.deepEqual(filterTrackIndexes(library, 'all', favorites), [0, 1, 2]);
+  assert.deepEqual(filterTrackIndexes(library, 'favorites', favorites), [1, 2]);
+  assert.deepEqual(filterTrackIndexes(library, 'sad', favorites), [0]);
 });

@@ -64,9 +64,10 @@ export function classifyMood({ bpm = 96, energy = 0.4, brightness = 0.4 }) {
   return bpm >= 104 ? 'happy' : 'romantic';
 }
 
-export function formatTrackSummary(mood, total) {
-  const labels = { happy: 'JOY', calm: 'CALM', sad: 'SAD', romantic: 'LOVE' };
-  return `${labels[mood] || String(mood).toUpperCase()} · ${total}`;
+export function formatTrackSummary(filter, total, filteredTotal = total) {
+  if (filter === 'all') return String(total);
+  const labels = { favorites: 'FAV', happy: 'JOY', calm: 'CALM', sad: 'SAD', romantic: 'LOVE' };
+  return `${labels[filter] || String(filter).toUpperCase()} · ${filteredTotal}`;
 }
 
 export function analyzePcmFeatures(samples, sampleRate) {

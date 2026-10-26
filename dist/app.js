@@ -61,6 +61,7 @@ let weatherMode = moodMeta[currentMood].weather;
 let screenMode = 'now';
 let pendingTrack = 0;
 let activeFilter = 'all';
+let playbackFilter = 'all';
 const customTrackUrls = [];
 const favoritesStorageKey = 'panel-pulse-favorites-v1';
 
@@ -153,6 +154,7 @@ function toggleFavorite(index) {
   if (favoriteKeys.has(key)) favoriteKeys.delete(key); else favoriteKeys.add(key);
   saveFavorites();
   updateFavoriteButton();
+  updateTrackSummary();
   renderTrackList();
 }
 
@@ -161,7 +163,8 @@ function visibleTrackIndexes() {
 }
 
 function updateTrackSummary() {
-  screenIndex.textContent = formatTrackSummary(tracks[current].mood, tracks.length);
+  const collectionTotal = filterTrackIndexes(tracks, playbackFilter, favoriteKeys).length;
+  screenIndex.textContent = formatTrackSummary(playbackFilter, tracks.length, collectionTotal);
 }
 
 function loadTrack(index, autoplay = false) {
@@ -207,6 +210,7 @@ function renderTrackList() {
     button.innerHTML = `<span>${track.title.toUpperCase()}</span>`;
     button.addEventListener('click', () => {
       pendingTrack = index;
+      playbackFilter = activeFilter;
       showNowPlaying();
       loadTrack(index, true);
     });
@@ -231,7 +235,7 @@ function setLibraryFilter(filter) {
 }
 
 function moveTrack(direction, autoplay = true) {
-  const queue = visibleTrackIndexes();
+  const queue = filterTrackIndexes(tracks, playbackFilter, favoriteKeys);
   const available = queue.length ? queue : filterTrackIndexes(tracks, 'all', favoriteKeys);
   const position = available.indexOf(current);
   const nextPosition = position < 0
@@ -302,6 +306,9 @@ async function playAudio() {
 
 function togglePlay() {
   if (screenMode === 'all') {
+    const queue = visibleTrackIndexes();
+    if (queue.length && !queue.includes(pendingTrack)) pendingTrack = queue[0];
+    playbackFilter = activeFilter;
     showNowPlaying();
     loadTrack(pendingTrack, true);
     return;

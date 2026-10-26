@@ -94,7 +94,8 @@ test('analyzePcmFeatures detects tempo and energy from uploaded audio samples', 
   assert.ok(features.brightness > 0);
 });
 
-test('formatTrackSummary shows mood and only the total track count', () => {
-  assert.equal(formatTrackSummary('sad', 6), 'SAD · 6');
-  assert.equal(formatTrackSummary('romantic', 12), 'LOVE · 12');
+test('formatTrackSummary reflects the collection the track was selected from', () => {
+  assert.equal(formatTrackSummary('all', 6, 6), '6');
+  assert.equal(formatTrackSummary('sad', 6, 2), 'SAD · 2');
+  assert.equal(formatTrackSummary('romantic', 12, 4), 'LOVE · 4');
 });

@@ -15,6 +15,12 @@ export function weatherSpawnY({ height, initial, random = Math.random() }) {
   return initial ? random * height : -30;
 }
 
+export function weatherParticleTarget({ mode, paused, mobile }) {
+  if (mode === 'stars') return 60;
+  if (mode === 'rain' && !paused) return mobile ? 240 : 180;
+  return 0;
+}
+
 export async function startPlayback({ play, resume, contextState }) {
   // Start both operations during the original user gesture. Awaiting resume()
   // before play() can make mobile browsers reject playback as autoplay.

@@ -1,4 +1,4 @@
-import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherSpawnY, wrapIndex } from './player-core.js';
+import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from './player-core.js';
 
 const tracks = [
   { title: 'In Confusion', file: 'audio/in-confusion.mp3', bpm: 92, energy: .44, brightness: .28 },
@@ -418,7 +418,11 @@ function makeParticle(initial = true) {
 
 function drawWeather(now) {
   ctx.clearRect(0, 0, innerWidth, innerHeight);
-  const target = audio.paused ? 0 : weatherMode === 'rain' ? (innerWidth <= 600 ? 240 : 180) : weatherMode === 'stars' ? 60 : 0;
+  const target = weatherParticleTarget({
+    mode: weatherMode,
+    paused: audio.paused,
+    mobile: innerWidth <= 600
+  });
   while (particles.length < target) particles.push(makeParticle(true));
   if (particles.length > target) particles.length = target;
 

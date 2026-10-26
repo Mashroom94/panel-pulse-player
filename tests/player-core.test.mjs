@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
+import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
 
 test('wrapIndex cycles through every available track', () => {
   assert.equal(wrapIndex(6, 6), 0);
@@ -22,6 +22,13 @@ test('weatherSpawnY fills the visible mobile weather field on first render', () 
   const y = weatherSpawnY({ height: 800, initial: true, random: 0.75 });
   assert.equal(y, 600);
   assert.equal(weatherSpawnY({ height: 800, initial: false, random: 0.75 }), -30);
+});
+
+test('weatherParticleTarget keeps stars visible while playback is paused', () => {
+  assert.equal(weatherParticleTarget({ mode: 'stars', paused: true, mobile: false }), 60);
+  assert.equal(weatherParticleTarget({ mode: 'rain', paused: true, mobile: true }), 0);
+  assert.equal(weatherParticleTarget({ mode: 'rain', paused: false, mobile: true }), 240);
+  assert.equal(weatherParticleTarget({ mode: 'clear', paused: false, mobile: false }), 0);
 });
 
 test('startPlayback starts the media before waiting for the audio graph to resume', async () => {

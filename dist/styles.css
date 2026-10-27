@@ -151,15 +151,15 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 .favorite-button { display:grid; place-items:center; width:clamp(16px,1.95vh,21px); height:clamp(15px,1.8vh,20px); padding:2px; border:0; background:transparent; }
 .favorite-button svg, .track-favorite svg { width:100%; height:100%; overflow:visible; fill:transparent; stroke:currentColor; stroke-width:1.8; stroke-linejoin:round; transition:fill 180ms ease, transform 180ms ease, color 180ms ease; }
 .favorite-button[aria-pressed="true"] svg, .track-favorite[aria-pressed="true"] svg { fill:var(--window); color:var(--window); transform:scale(1.06); }
-#allClose, #uploadButton, #searchButton { min-width:22px; min-height:20px; padding:0; border:0; background:transparent; }
+#allClose, #uploadButton, #searchButton { min-width:19px; min-height:18px; padding:0; border:0; background:transparent; }
 #allClose { display:flex; align-items:center; gap:3px; text-align:left; }
 #allClose svg { width:clamp(8px,1vh,11px); height:auto; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
-.library-tools { display:flex; align-items:center; gap:3px; }
+.library-tools { display:flex; align-items:center; gap:2px; }
 #searchButton { display:grid; place-items:center; color:rgba(217,239,255,.72); }
-#searchButton svg { width:clamp(13px,1.55vh,17px); height:auto; fill:none; stroke:currentColor; stroke-width:1.55; stroke-linecap:round; stroke-linejoin:round; }
+#searchButton svg { width:clamp(11px,1.35vh,15px); height:auto; fill:none; stroke:currentColor; stroke-width:1.55; stroke-linecap:round; stroke-linejoin:round; }
 #searchButton[aria-pressed="true"] { color:var(--window); filter:drop-shadow(0 0 4px rgba(var(--window-rgb),.65)); }
-#uploadButton { display:flex; align-items:center; justify-content:center; min-width:25px; min-height:23px; color:#fff; border:1px solid rgba(var(--window-rgb),.85); border-radius:3px; background:rgba(var(--window-rgb),.14); text-align:center; }
-#uploadButton svg { width:clamp(19px,2.35vh,26px); height:auto; overflow:visible; fill:none; filter:drop-shadow(0 0 4px rgba(var(--window-rgb),.7)); }
+#uploadButton { display:flex; align-items:center; justify-content:center; min-width:21px; min-height:19px; color:#fff; border:1px solid rgba(var(--window-rgb),.85); border-radius:3px; background:rgba(var(--window-rgb),.14); text-align:center; }
+#uploadButton svg { width:clamp(16px,1.9vh,21px); height:auto; overflow:visible; fill:none; filter:drop-shadow(0 0 4px rgba(var(--window-rgb),.7)); }
 #uploadButton .upload-note { fill:none; stroke:currentColor; stroke-width:1.35; stroke-linecap:round; stroke-linejoin:round; }
 #uploadButton .upload-plus { fill:none; stroke:var(--window); stroke-width:1.65; stroke-linecap:round; }
 .all-button:focus-visible, .favorite-button:focus-visible, .now-delete-button:focus-visible, #allClose:focus-visible, #uploadButton:focus-visible, #searchButton:focus-visible, .upload-menu button:focus-visible, .delete-confirm button:focus-visible, .library-tabs button:focus-visible, .library-view-tabs button:focus-visible, .track-favorite:focus-visible { outline:1px solid var(--window); outline-offset:2px; }
@@ -192,17 +192,17 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 .search-row[hidden] { display:none; }
 .search-row input { appearance:none; width:100%; height:clamp(17px,2vh,22px); padding:2px 5px; border:1px solid rgba(var(--window-rgb),.7); border-radius:2px; outline:0; background:rgba(1,7,11,.72); color:#fff; font:inherit; font-size:clamp(5px,.62vh,8px); letter-spacing:.04em; }
 .search-row input::placeholder { color:rgba(217,239,255,.38); }
-.library-view-tabs { display:flex; gap:3px; margin-top:2.5%; }
-.library-view-tabs button { flex:1; min-height:15px; padding:2px 4px; border:0; border-bottom:1px solid rgba(217,239,255,.18); background:transparent; color:rgba(217,239,255,.42); font-size:clamp(5px,.57vh,7px); line-height:1; }
+.library-view-tabs { display:flex; align-self:center; width:76%; gap:2px; margin-top:.4%; }
+.library-view-tabs button { flex:1; min-height:12px; padding:1px 3px; border:0; border-bottom:1px solid rgba(217,239,255,.18); background:transparent; color:rgba(217,239,255,.42); font-size:clamp(4px,.52vh,6px); line-height:1; }
 .library-view-tabs button[aria-selected="true"] { border-bottom-color:var(--window); color:#fff; }
-.library-tabs { display:flex; gap:2px; margin-top:3%; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:none; }
+.library-tabs { display:flex; align-self:flex-start; width:max-content; max-width:100%; gap:1px; margin-top:1%; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:none; }
 .library-tabs::-webkit-scrollbar { display:none; }
-.library-tabs button { flex:none; min-height:17px; padding:2px 4px; border:1px solid rgba(217,239,255,.18); border-radius:2px; background:transparent; color:rgba(217,239,255,.52); font-size:clamp(5px,.57vh,7px); line-height:1; }
+.library-tabs button { flex:none; min-height:13px; padding:1px 2px; border:1px solid rgba(217,239,255,.18); border-radius:2px; background:transparent; color:rgba(217,239,255,.52); font-size:clamp(4px,.49vh,6px); line-height:1; }
 .library-tabs button[aria-selected="true"] { border-color:var(--window); background:rgba(var(--window-rgb),.17); color:#fff; }
-.library-tabs .favorites-tab { display:grid; place-items:center; width:22px; padding:2px 4px; }
-.library-tabs .favorites-tab svg { width:11px; height:11px; fill:transparent; stroke:currentColor; stroke-width:1.8; stroke-linejoin:round; }
+.library-tabs .favorites-tab { display:grid; place-items:center; width:17px; padding:1px 3px; }
+.library-tabs .favorites-tab svg { width:8px; height:8px; fill:transparent; stroke:currentColor; stroke-width:1.8; stroke-linejoin:round; }
 .library-tabs .favorites-tab[aria-selected="true"] svg { fill:var(--window); color:var(--window); }
-.track-list { list-style:none; padding:0 0 2%; margin:2.5% 0 0; min-height:0; flex:1; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#fff transparent; display:flex; flex-direction:column; gap:2%; counter-reset:tracks; }
+.track-list { list-style:none; padding:0 0 1%; margin:1.2% 0 0; min-height:0; flex:1; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#fff transparent; display:flex; flex-direction:column; gap:1%; counter-reset:tracks; }
 .track-list::-webkit-scrollbar { width:2px; }
 .track-list::-webkit-scrollbar-thumb { background:#fff; border-radius:2px; }
 .track-item { min-width:0; display:flex; align-items:center; padding-right:7px; }

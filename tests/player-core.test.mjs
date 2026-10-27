@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
+import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, groupTracksByAlbum, hasAudioSignal, matchesTrackSearch, parseId3Metadata, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
 
 test('wrapIndex cycles through every available track', () => {
   assert.equal(wrapIndex(6, 6), 0);
@@ -105,4 +105,55 @@ test('formatTrackSummary reflects the collection the track was selected from', (
   assert.equal(formatTrackSummary('all', 6, 6), '6');
   assert.equal(formatTrackSummary('sad', 6, 2), 'SAD · 2');
   assert.equal(formatTrackSummary('romantic', 12, 4), 'LOVE · 4');
+});
+
+test('trackKey keeps a persisted custom track identity stable across browser sessions', () => {
+  assert.equal(trackKey({ id: 'local-42', title: 'Night', file: 'blob:first' }), 'local-42');
+  assert.equal(trackKey({ id: 'local-42', title: 'Night', file: 'blob:second' }), 'local-42');
+});
+
+test('matchesTrackSearch searches titles, artists, and albums without case sensitivity', () => {
+  const track = { title: 'Blue Evening', artist: 'Mira', album: 'City Lights' };
+  assert.equal(matchesTrackSearch(track, 'even'), true);
+  assert.equal(matchesTrackSearch(track, 'MIRA'), true);
+  assert.equal(matchesTrackSearch(track, 'city'), true);
+  assert.equal(matchesTrackSearch(track, 'forest'), false);
+});
+
+test('groupTracksByAlbum groups tagged tracks and keeps untagged music discoverable', () => {
+  const library = [
+    { title: 'One', artist: 'Mira', album: 'Blue' },
+    { title: 'Two', artist: 'Mira', album: 'Blue' },
+    { title: 'Loose track', artist: 'Alex' }
+  ];
+  assert.deepEqual(groupTracksByAlbum(library, [0, 1, 2]), [
+    { album: 'Blue', artist: 'Mira', indexes: [0, 1] },
+    { album: 'Без альбома', artist: 'Alex', indexes: [2] }
+  ]);
+});
+
+test('parseId3Metadata reads album, artist, and title tags from an uploaded mp3', () => {
+  const encoder = new TextEncoder();
+  const frame = (id, value) => {
+    const payload = Uint8Array.from([3, ...encoder.encode(value)]);
+    return Uint8Array.from([
+      ...encoder.encode(id),
+      0, 0, 0, payload.length,
+      0, 0,
+      ...payload
+    ]);
+  };
+  const frames = [frame('TIT2', 'First Light'), frame('TPE1', 'Mira'), frame('TALB', 'Blue')];
+  const bodyLength = frames.reduce((sum, value) => sum + value.length, 0);
+  const header = Uint8Array.from([...encoder.encode('ID3'), 3, 0, 0, 0, 0, 0, bodyLength]);
+  const bytes = new Uint8Array(10 + bodyLength);
+  bytes.set(header);
+  let offset = 10;
+  frames.forEach(value => { bytes.set(value, offset); offset += value.length; });
+
+  assert.deepEqual(parseId3Metadata(bytes.buffer), {
+    title: 'First Light',
+    artist: 'Mira',
+    album: 'Blue'
+  });
 });

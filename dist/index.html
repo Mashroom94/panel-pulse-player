@@ -33,7 +33,7 @@
               <div class="screen-title" id="screenTitle">IN CONFUSION</div>
               <span class="screen-volume">VOL <b id="volumeText">78</b></span>
             </div>
-            <div class="screen-artist">RAREERRA</div>
+            <div class="screen-artist" id="screenArtist">RAREERRA</div>
             <div class="equalizer" id="equalizer" aria-hidden="true"></div>
             <div class="progress-row">
               <span id="elapsed">0:00</span>
@@ -62,17 +62,32 @@
                 <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M9 4 3 10l6 6M3.5 10H17"/></svg>
                 <span>BACK</span>
               </button>
-              <button id="uploadButton" type="button" aria-label="Добавить треки с компьютера" title="Добавить свои треки">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path class="upload-note" d="M12.5 5.5v10.2m0-7.4L19 6.7v7.8M12.5 8.3 19 6.7"/>
-                  <circle class="upload-note" cx="10.1" cy="16.9" r="2.3"/>
-                  <circle class="upload-note" cx="16.6" cy="15.7" r="2.3"/>
-                  <path class="upload-plus" d="M5 3.5v6M2 6.5h6"/>
-                </svg>
-              </button>
+              <div class="library-tools">
+                <button id="searchButton" type="button" aria-label="Найти трек или альбом" title="Поиск">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.8"/><path d="m15 15 4.5 4.5"/></svg>
+                </button>
+                <button id="deleteButton" type="button" aria-label="Удалить трек из локальной библиотеки" aria-pressed="false" title="Удалить трек">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 7.5h13M9 7.5V5.2h6v2.3m-7.7 0 .7 11h8l.7-11M10 10.5v5M14 10.5v5"/></svg>
+                </button>
+                <button id="uploadButton" type="button" aria-label="Добавить треки с компьютера" title="Добавить свои треки">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path class="upload-note" d="M12.5 5.5v10.2m0-7.4L19 6.7v7.8M12.5 8.3 19 6.7"/>
+                    <circle class="upload-note" cx="10.1" cy="16.9" r="2.3"/>
+                    <circle class="upload-note" cx="16.6" cy="15.7" r="2.3"/>
+                    <path class="upload-plus" d="M5 3.5v6M2 6.5h6"/>
+                  </svg>
+                </button>
+              </div>
               <input id="trackUpload" type="file" accept="audio/*" multiple hidden>
             </div>
             <h2 class="all-title" id="libraryTitle">ALL TRACKS</h2>
+            <div class="search-row" id="searchRow" hidden>
+              <input id="librarySearch" type="search" autocomplete="off" placeholder="ТРЕК, ИСПОЛНИТЕЛЬ, АЛЬБОМ" aria-label="Поиск по библиотеке">
+            </div>
+            <div class="library-view-tabs" id="libraryViewTabs" role="tablist" aria-label="Отображение библиотеки">
+              <button type="button" role="tab" data-view="tracks" aria-selected="true">TRACKS</button>
+              <button type="button" role="tab" data-view="albums" aria-selected="false">ALBUMS</button>
+            </div>
             <div class="library-tabs" id="libraryTabs" role="tablist" aria-label="Фильтр библиотеки">
               <button type="button" role="tab" data-filter="all" aria-selected="true">ALL</button>
               <button class="favorites-tab" type="button" role="tab" data-filter="favorites" aria-label="Избранное" title="Избранное" aria-selected="false">
@@ -84,7 +99,7 @@
               <button type="button" role="tab" data-filter="romantic" aria-selected="false">LOVE</button>
             </div>
             <ol class="track-list" id="trackList"></ol>
-            <div class="all-hint">НАЖМИ НА ТРЕК, ЧТОБЫ СЛУШАТЬ</div>
+            <div class="all-hint" id="allHint">НАЖМИ НА ТРЕК, ЧТОБЫ СЛУШАТЬ</div>
           </div>
         </div>
 

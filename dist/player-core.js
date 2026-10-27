@@ -49,7 +49,75 @@ export function hasAudioSignal({ energy, bass }) {
 }
 
 export function trackKey(track) {
-  return `${track.file || ''}::${track.title || ''}`;
+  return track.id || `${track.file || ''}::${track.title || ''}`;
+}
+
+export function matchesTrackSearch(track, query) {
+  const normalized = String(query || '').trim().toLocaleLowerCase('ru');
+  if (!normalized) return true;
+  return [track.title, track.artist, track.album]
+    .filter(Boolean)
+    .some(value => String(value).toLocaleLowerCase('ru').includes(normalized));
+}
+
+export function groupTracksByAlbum(tracks, indexes) {
+  const groups = new Map();
+  indexes.forEach(index => {
+    const track = tracks[index];
+    const album = track.album?.trim() || 'Без альбома';
+    const artist = track.artist?.trim() || 'Неизвестный исполнитель';
+    const key = `${album.toLocaleLowerCase('ru')}::${artist.toLocaleLowerCase('ru')}`;
+    if (!groups.has(key)) groups.set(key, { album, artist, indexes: [] });
+    groups.get(key).indexes.push(index);
+  });
+  return [...groups.values()];
+}
+
+function syncsafeSize(bytes, offset) {
+  return ((bytes[offset] & 0x7f) << 21)
+    | ((bytes[offset + 1] & 0x7f) << 14)
+    | ((bytes[offset + 2] & 0x7f) << 7)
+    | (bytes[offset + 3] & 0x7f);
+}
+
+function decodeId3Text(payload) {
+  if (payload.length < 2) return '';
+  const encoding = payload[0];
+  const bytes = payload.subarray(1);
+  try {
+    if (encoding === 1 || encoding === 2) {
+      const littleEndian = encoding === 1 && bytes[0] === 0xff && bytes[1] === 0xfe;
+      const start = encoding === 1 && ((bytes[0] === 0xff && bytes[1] === 0xfe) || (bytes[0] === 0xfe && bytes[1] === 0xff)) ? 2 : 0;
+      return new TextDecoder(littleEndian ? 'utf-16le' : 'utf-16be').decode(bytes.subarray(start)).replace(/\0+$/g, '').trim();
+    }
+    return new TextDecoder(encoding === 3 ? 'utf-8' : 'windows-1252').decode(bytes).replace(/\0+$/g, '').trim();
+  } catch {
+    return '';
+  }
+}
+
+export function parseId3Metadata(arrayBuffer) {
+  const bytes = new Uint8Array(arrayBuffer);
+  if (bytes.length < 10 || String.fromCharCode(...bytes.subarray(0, 3)) !== 'ID3') return {};
+  const version = bytes[3];
+  const tagEnd = Math.min(bytes.length, 10 + syncsafeSize(bytes, 6));
+  const fields = { TIT2: 'title', TPE1: 'artist', TALB: 'album' };
+  const result = {};
+  let offset = 10;
+  while (offset + 10 <= tagEnd) {
+    const id = String.fromCharCode(...bytes.subarray(offset, offset + 4));
+    if (!/^[A-Z0-9]{4}$/.test(id)) break;
+    const size = version === 4
+      ? syncsafeSize(bytes, offset + 4)
+      : new DataView(bytes.buffer, bytes.byteOffset + offset + 4, 4).getUint32(0);
+    if (!size || offset + 10 + size > tagEnd) break;
+    if (fields[id]) {
+      const value = decodeId3Text(bytes.subarray(offset + 10, offset + 10 + size));
+      if (value) result[fields[id]] = value;
+    }
+    offset += 10 + size;
+  }
+  return result;
 }
 
 export function filterTrackIndexes(tracks, filter, favorites = new Set()) {

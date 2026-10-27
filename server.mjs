@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { extname, join, normalize } from 'node:path';
 
 const root = join(process.cwd(), 'dist');
+const port = Number(process.env.PANEL_PLAYER_PORT || 4173);
 const mime = { '.html':'text/html; charset=utf-8', '.css':'text/css', '.js':'text/javascript', '.png':'image/png', '.mp3':'audio/mpeg' };
 
 createServer((request, response) => {
@@ -25,4 +26,4 @@ createServer((request, response) => {
   }
   response.writeHead(200, { 'Content-Length': size, 'Content-Type': mime[extname(file)] || 'application/octet-stream' });
   createReadStream(file).pipe(response);
-}).listen(4173, '127.0.0.1', () => console.log('Local: http://127.0.0.1:4173'));
+}).listen(port, '127.0.0.1', () => console.log(`Local: http://127.0.0.1:${port}`));

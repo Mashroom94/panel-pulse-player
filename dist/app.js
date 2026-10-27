@@ -1,12 +1,12 @@
-import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, hasAudioSignal, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from './player-core.js';
+import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, groupTracksByAlbum, hasAudioSignal, matchesTrackSearch, parseId3Metadata, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from './player-core.js';
 
 const tracks = [
-  { title: 'In Confusion', file: 'audio/in-confusion.mp3', bpm: 92, energy: .44, brightness: .28 },
-  { title: 'Lost In The Mall', file: 'audio/lost-in-the-mall.mp3', bpm: 82, energy: .27, brightness: .36 },
-  { title: 'Neon Lambs', file: 'audio/neon-lambs.mp3', bpm: 122, energy: .72, brightness: .69 },
-  { title: 'Night Shine', file: 'audio/night-shine.mp3', bpm: 74, energy: .4, brightness: .63 },
-  { title: 'Silver Wires', file: 'audio/silver-wires.mp3', bpm: 88, energy: .3, brightness: .43 },
-  { title: 'Under The Roofs', file: 'audio/under-the-roofs.mp3', bpm: 96, energy: .46, brightness: .31 }
+  { id: 'builtin-in-confusion', title: 'In Confusion', artist: 'RAREERRA', album: 'Panel Pulse', file: 'audio/in-confusion.mp3', bpm: 92, energy: .44, brightness: .28 },
+  { id: 'builtin-lost-in-the-mall', title: 'Lost In The Mall', artist: 'RAREERRA', album: 'Panel Pulse', file: 'audio/lost-in-the-mall.mp3', bpm: 82, energy: .27, brightness: .36 },
+  { id: 'builtin-neon-lambs', title: 'Neon Lambs', artist: 'RAREERRA', album: 'Panel Pulse', file: 'audio/neon-lambs.mp3', bpm: 122, energy: .72, brightness: .69 },
+  { id: 'builtin-night-shine', title: 'Night Shine', artist: 'RAREERRA', album: 'Panel Pulse', file: 'audio/night-shine.mp3', bpm: 74, energy: .4, brightness: .63 },
+  { id: 'builtin-silver-wires', title: 'Silver Wires', artist: 'RAREERRA', album: 'Panel Pulse', file: 'audio/silver-wires.mp3', bpm: 88, energy: .3, brightness: .43 },
+  { id: 'builtin-under-the-roofs', title: 'Under The Roofs', artist: 'RAREERRA', album: 'Panel Pulse', file: 'audio/under-the-roofs.mp3', bpm: 96, energy: .46, brightness: .31 }
 ];
 
 tracks.forEach(track => { track.mood = classifyMood(track); });
@@ -22,6 +22,7 @@ const audio = document.querySelector('#audio');
 const scene = document.querySelector('.scene');
 const playButton = document.querySelector('#play');
 const screenTitle = document.querySelector('#screenTitle');
+const screenArtist = document.querySelector('#screenArtist');
 const screenIndex = document.querySelector('#screenIndex');
 const volumeText = document.querySelector('#volumeText');
 const elapsed = document.querySelector('#elapsed');
@@ -34,10 +35,16 @@ const allButton = document.querySelector('#allButton');
 const favoriteButton = document.querySelector('#favoriteButton');
 const allClose = document.querySelector('#allClose');
 const uploadButton = document.querySelector('#uploadButton');
+const searchButton = document.querySelector('#searchButton');
+const deleteButton = document.querySelector('#deleteButton');
 const trackUpload = document.querySelector('#trackUpload');
 const trackList = document.querySelector('#trackList');
 const libraryTitle = document.querySelector('#libraryTitle');
 const libraryTabs = document.querySelector('#libraryTabs');
+const libraryViewTabs = document.querySelector('#libraryViewTabs');
+const searchRow = document.querySelector('#searchRow');
+const librarySearch = document.querySelector('#librarySearch');
+const allHint = document.querySelector('#allHint');
 const equalizer = document.querySelector('#equalizer');
 const windowField = document.querySelector('#windowField');
 const canvas = document.querySelector('#weather');
@@ -62,8 +69,13 @@ let screenMode = 'now';
 let pendingTrack = 0;
 let activeFilter = 'all';
 let playbackFilter = 'all';
+let libraryView = 'tracks';
+let searchQuery = '';
+let deleteMode = false;
 const customTrackUrls = [];
 const favoritesStorageKey = 'panel-pulse-favorites-v1';
+const libraryDatabaseName = 'panel-pulse-library-v1';
+const libraryStoreName = 'tracks';
 
 const filterMeta = {
   all: { title: 'ALL TRACKS', empty: 'NO TRACKS' },
@@ -84,6 +96,93 @@ function readFavorites() {
 }
 
 let favoriteKeys = readFavorites();
+
+function openLocalLibrary() {
+  return new Promise((resolve, reject) => {
+    if (!('indexedDB' in window)) {
+      reject(new Error('IndexedDB is unavailable'));
+      return;
+    }
+    const request = indexedDB.open(libraryDatabaseName, 1);
+    request.onupgradeneeded = () => {
+      const database = request.result;
+      if (!database.objectStoreNames.contains(libraryStoreName)) {
+        database.createObjectStore(libraryStoreName, { keyPath: 'id' });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('Unable to open local library'));
+  });
+}
+
+async function withLocalLibrary(mode, action) {
+  const database = await openLocalLibrary();
+  try {
+    return await new Promise((resolve, reject) => {
+      const transaction = database.transaction(libraryStoreName, mode);
+      const store = transaction.objectStore(libraryStoreName);
+      let result;
+      try { result = action(store); } catch (error) { reject(error); return; }
+      transaction.oncomplete = () => resolve(result?.result);
+      transaction.onerror = () => reject(transaction.error || new Error('Local library transaction failed'));
+      transaction.onabort = () => reject(transaction.error || new Error('Local library transaction was cancelled'));
+    });
+  } finally {
+    database.close();
+  }
+}
+
+function storedTrackRecord(track) {
+  return {
+    id: track.id,
+    title: track.title,
+    artist: track.artist || '',
+    album: track.album || '',
+    bpm: track.bpm,
+    energy: track.energy,
+    brightness: track.brightness,
+    mood: track.mood,
+    createdAt: track.createdAt,
+    type: track.type || track.blob?.type || '',
+    blob: track.blob
+  };
+}
+
+async function saveLocalTrack(track) {
+  if (!track.custom || !track.blob) return;
+  await withLocalLibrary('readwrite', store => store.put(storedTrackRecord(track)));
+}
+
+async function deleteLocalTrack(id) {
+  await withLocalLibrary('readwrite', store => store.delete(id));
+}
+
+async function readLocalTracks() {
+  const records = await withLocalLibrary('readonly', store => store.getAll());
+  return Array.isArray(records) ? records : [];
+}
+
+async function restoreLocalLibrary() {
+  try {
+    const records = await readLocalTracks();
+    records.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    records.forEach(record => {
+      if (!(record.blob instanceof Blob)) return;
+      const url = URL.createObjectURL(record.blob);
+      customTrackUrls.push(url);
+      tracks.push({
+        ...record,
+        file: url,
+        custom: true,
+        analyzing: false
+      });
+    });
+    updateTrackSummary();
+    renderTrackList();
+  } catch (error) {
+    console.warn('Local library could not be restored', error);
+  }
+}
 
 const eqBars = Array.from({ length: 18 }, () => {
   const bar = document.createElement('i');
@@ -159,7 +258,8 @@ function toggleFavorite(index) {
 }
 
 function visibleTrackIndexes() {
-  return filterTrackIndexes(tracks, activeFilter, favoriteKeys);
+  return filterTrackIndexes(tracks, activeFilter, favoriteKeys)
+    .filter(index => matchesTrackSearch(tracks[index], searchQuery));
 }
 
 function updateTrackSummary() {
@@ -172,6 +272,7 @@ function loadTrack(index, autoplay = false) {
   const track = tracks[current];
   audio.src = track.file;
   screenTitle.textContent = track.title.toUpperCase();
+  screenArtist.textContent = (track.artist || 'UNKNOWN ARTIST').toUpperCase();
   updateTrackSummary();
   smoothBass = 0;
   lastAudioSignal = 0;
@@ -185,30 +286,71 @@ function loadTrack(index, autoplay = false) {
 function renderTrackList() {
   trackList.innerHTML = '';
   const indexes = visibleTrackIndexes();
-  libraryTitle.textContent = filterMeta[activeFilter].title;
+  libraryTitle.textContent = libraryView === 'albums' && activeFilter === 'all'
+    ? 'ALBUMS'
+    : filterMeta[activeFilter].title;
   libraryTabs.querySelectorAll('[data-filter]').forEach(button => {
     button.setAttribute('aria-selected', String(button.dataset.filter === activeFilter));
   });
+  libraryViewTabs.querySelectorAll('[data-view]').forEach(button => {
+    button.setAttribute('aria-selected', String(button.dataset.view === libraryView));
+  });
+  deleteButton.setAttribute('aria-pressed', String(deleteMode));
+  allScreen.classList.toggle('delete-mode', deleteMode);
+  allHint.textContent = deleteMode ? 'ВЫБЕРИ ДОБАВЛЕННЫЙ ТРЕК' : 'НАЖМИ НА ТРЕК, ЧТОБЫ СЛУШАТЬ';
 
   if (!indexes.length) {
     const empty = document.createElement('li');
     empty.className = 'empty-library';
-    empty.textContent = filterMeta[activeFilter].empty;
+    empty.textContent = searchQuery ? 'НИЧЕГО НЕ НАЙДЕНО' : filterMeta[activeFilter].empty;
     trackList.appendChild(empty);
     return;
   }
 
-  indexes.forEach(index => {
+  if (libraryView === 'albums') {
+    groupTracksByAlbum(tracks, indexes).forEach(group => {
+      const album = document.createElement('li');
+      album.className = 'album-group';
+      const heading = document.createElement('div');
+      heading.className = 'album-heading';
+      const albumName = document.createElement('strong');
+      albumName.textContent = group.album.toUpperCase();
+      const albumMeta = document.createElement('span');
+      albumMeta.textContent = `${group.artist.toUpperCase()} · ${group.indexes.length}`;
+      heading.append(albumName, albumMeta);
+      album.appendChild(heading);
+      const albumTracks = document.createElement('ol');
+      albumTracks.className = 'album-tracks';
+      group.indexes.forEach(index => albumTracks.appendChild(createTrackItem(index)));
+      album.appendChild(albumTracks);
+      trackList.appendChild(album);
+    });
+    return;
+  }
+
+  indexes.forEach(index => trackList.appendChild(createTrackItem(index)));
+}
+
+function createTrackItem(index) {
     const track = tracks[index];
     const item = document.createElement('li');
     item.className = 'track-item';
     item.classList.toggle('selected', index === pendingTrack);
     item.classList.toggle('current', index === current);
+    item.classList.toggle('deletable', Boolean(track.custom));
     const button = document.createElement('button');
     button.className = 'track-choice';
     button.type = 'button';
-    button.innerHTML = `<span>${track.title.toUpperCase()}</span>`;
+    const title = document.createElement('span');
+    title.textContent = track.title.toUpperCase();
+    const artist = document.createElement('small');
+    artist.textContent = (track.artist || '').toUpperCase();
+    button.append(title, artist);
     button.addEventListener('click', () => {
+      if (deleteMode) {
+        if (track.custom) void removeCustomTrack(index);
+        return;
+      }
       pendingTrack = index;
       playbackFilter = activeFilter;
       showNowPlaying();
@@ -223,9 +365,32 @@ function renderTrackList() {
     favorite.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2 4.3 13A5.1 5.1 0 0 1 11.5 5.8l.5.5.5-.5A5.1 5.1 0 0 1 19.7 13Z"/></svg>';
     favorite.addEventListener('click', () => toggleFavorite(index));
     item.appendChild(button);
-    item.appendChild(favorite);
-    trackList.appendChild(item);
-  });
+    if (!deleteMode) item.appendChild(favorite);
+    return item;
+}
+
+async function removeCustomTrack(index) {
+  const removed = tracks[index];
+  if (!removed?.custom) return;
+  const wasCurrent = index === current;
+  if (wasCurrent) audio.pause();
+  favoriteKeys.delete(trackKey(removed));
+  saveFavorites();
+  URL.revokeObjectURL(removed.file);
+  const urlIndex = customTrackUrls.indexOf(removed.file);
+  if (urlIndex >= 0) customTrackUrls.splice(urlIndex, 1);
+  tracks.splice(index, 1);
+  if (index < current) current -= 1;
+  if (index < pendingTrack) pendingTrack -= 1;
+  pendingTrack = Math.max(0, Math.min(pendingTrack, tracks.length - 1));
+  current = Math.max(0, Math.min(current, tracks.length - 1));
+  try { await deleteLocalTrack(removed.id); } catch (error) { console.warn('Track could not be removed from local storage', error); }
+  if (wasCurrent && tracks.length) loadTrack(current, false);
+  else {
+    updateTrackSummary();
+    updateFavoriteButton();
+    renderTrackList();
+  }
 }
 
 function setLibraryFilter(filter) {
@@ -491,6 +656,7 @@ async function categorizeUploadedTrack(file, track) {
     track.analyzing = false;
   } finally {
     if (decoder && typeof decoder.close === 'function') await decoder.close().catch(() => {});
+    try { await saveLocalTrack(track); } catch (error) { console.warn('Track analysis could not be saved', error); }
     renderTrackList();
   }
 }
@@ -507,24 +673,59 @@ libraryTabs.addEventListener('click', event => {
   const button = event.target.closest('[data-filter]');
   if (button) setLibraryFilter(button.dataset.filter);
 });
+libraryViewTabs.addEventListener('click', event => {
+  const button = event.target.closest('[data-view]');
+  if (!button) return;
+  libraryView = button.dataset.view;
+  renderTrackList();
+});
+searchButton.addEventListener('click', () => {
+  const opening = searchRow.hidden;
+  searchRow.hidden = !opening;
+  searchButton.setAttribute('aria-pressed', String(opening));
+  if (opening) librarySearch.focus();
+  else {
+    librarySearch.value = '';
+    searchQuery = '';
+    renderTrackList();
+  }
+});
+librarySearch.addEventListener('input', () => {
+  searchQuery = librarySearch.value;
+  renderTrackList();
+});
+deleteButton.addEventListener('click', () => {
+  deleteMode = !deleteMode;
+  renderTrackList();
+});
 uploadButton.addEventListener('click', () => trackUpload.click());
-trackUpload.addEventListener('change', () => {
-  const files = Array.from(trackUpload.files || []).filter(file => file.type.startsWith('audio/'));
-  files.forEach(file => {
+trackUpload.addEventListener('change', async () => {
+  const files = Array.from(trackUpload.files || []).filter(file => file.type.startsWith('audio/') || /\.(mp3|m4a|aac|wav|ogg|flac)$/i.test(file.name));
+  for (const file of files) {
+    let metadata = {};
+    try { metadata = parseId3Metadata(await file.slice(0, 512 * 1024).arrayBuffer()); } catch { /* Filename fallback below. */ }
     const url = URL.createObjectURL(file);
     const fallbackFeatures = { bpm: 96, energy: .3, brightness: .38 };
     const track = {
-      title: trackTitleFromFile(file.name),
+      id: globalThis.crypto?.randomUUID?.() || `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      title: metadata.title || trackTitleFromFile(file.name),
+      artist: metadata.artist || 'Unknown artist',
+      album: metadata.album || '',
       file: url,
       ...fallbackFeatures,
       mood: classifyMood(fallbackFeatures),
       custom: true,
-      analyzing: true
+      analyzing: true,
+      createdAt: Date.now(),
+      type: file.type,
+      blob: file
     };
     customTrackUrls.push(url);
     tracks.push(track);
+    try { await saveLocalTrack(track); } catch (error) { console.warn('Track could not be saved locally', error); }
     void categorizeUploadedTrack(file, track);
-  });
+  }
+  navigator.storage?.persist?.().catch(() => {});
   trackUpload.value = '';
   if (files.length) {
     updateTrackSummary();
@@ -562,5 +763,6 @@ window.addEventListener('beforeunload', () => customTrackUrls.forEach(url => URL
 
 setVolume(.78);
 loadTrack(0);
+void restoreLocalLibrary();
 resizeCanvas();
 requestAnimationFrame(loop);

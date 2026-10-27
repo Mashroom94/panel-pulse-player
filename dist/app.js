@@ -352,16 +352,7 @@ function createTrackItem(index) {
       showNowPlaying();
       loadTrack(index, true);
     });
-    const favorite = document.createElement('button');
-    const favoriteActive = isFavorite(index);
-    favorite.className = 'track-favorite';
-    favorite.type = 'button';
-    favorite.setAttribute('aria-pressed', String(favoriteActive));
-    favorite.setAttribute('aria-label', favoriteActive ? `Удалить ${track.title} из избранного` : `Добавить ${track.title} в избранное`);
-    favorite.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2 4.3 13A5.1 5.1 0 0 1 11.5 5.8l.5.5.5-.5A5.1 5.1 0 0 1 19.7 13Z"/></svg>';
-    favorite.addEventListener('click', () => toggleFavorite(index));
     item.appendChild(button);
-    item.appendChild(favorite);
     return item;
 }
 

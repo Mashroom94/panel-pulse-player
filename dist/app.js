@@ -80,6 +80,7 @@ let searchQuery = '';
 let pendingDeleteId = null;
 const customTrackUrls = [];
 const favoritesStorageKey = 'panel-pulse-favorites-v1';
+const deletedTracksStorageKey = 'panel-pulse-deleted-tracks-v1';
 const libraryDatabaseName = 'panel-pulse-library-v1';
 const libraryStoreName = 'tracks';
 
@@ -102,6 +103,24 @@ function readFavorites() {
 }
 
 let favoriteKeys = readFavorites();
+
+function readDeletedTracks() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(deletedTracksStorageKey) || '[]');
+    return new Set(Array.isArray(saved) ? saved.filter(value => typeof value === 'string') : []);
+  } catch {
+    return new Set();
+  }
+}
+
+const deletedTrackIds = readDeletedTracks();
+for (let index = tracks.length - 1; index >= 0; index -= 1) {
+  if (deletedTrackIds.has(tracks[index].id)) tracks.splice(index, 1);
+}
+
+function saveDeletedTracks() {
+  try { localStorage.setItem(deletedTracksStorageKey, JSON.stringify([...deletedTrackIds])); } catch { /* Session-only fallback. */ }
+}
 
 function openLocalLibrary() {
   return new Promise((resolve, reject) => {
@@ -170,6 +189,7 @@ async function readLocalTracks() {
 
 async function restoreLocalLibrary() {
   try {
+    const wasEmpty = tracks.length === 0;
     const records = await readLocalTracks();
     records.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
     records.forEach(record => {
@@ -183,8 +203,13 @@ async function restoreLocalLibrary() {
         analyzing: false
       });
     });
-    updateTrackSummary();
-    renderTrackList();
+    if (wasEmpty && tracks.length) {
+      favoriteButton.hidden = false;
+      loadTrack(0, false);
+    } else {
+      updateTrackSummary();
+      renderTrackList();
+    }
   } catch (error) {
     console.warn('Local library could not be restored', error);
   }
@@ -352,13 +377,23 @@ function createTrackItem(index) {
       showNowPlaying();
       loadTrack(index, true);
     });
-    item.appendChild(button);
+    const remove = document.createElement('button');
+    remove.className = 'track-delete';
+    remove.type = 'button';
+    remove.setAttribute('aria-label', `Удалить ${track.title}`);
+    remove.title = 'Удалить трек';
+    remove.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg>';
+    remove.addEventListener('click', event => {
+      event.stopPropagation();
+      openDeleteConfirmation(index);
+    });
+    item.append(button, remove);
     return item;
 }
 
-function openDeleteConfirmation() {
-  const track = tracks[current];
-  if (!track?.custom) return;
+function openDeleteConfirmation(index = current) {
+  const track = tracks[index];
+  if (!track) return;
   pendingDeleteId = track.id;
   deleteConfirmName.textContent = track.title.toUpperCase();
   deleteConfirm.hidden = false;
@@ -373,28 +408,44 @@ function closeDeleteConfirmation() {
 }
 
 async function confirmTrackDeletion() {
-  const index = tracks.findIndex(track => track.id === pendingDeleteId && track.custom);
+  const index = tracks.findIndex(track => track.id === pendingDeleteId);
   closeDeleteConfirmation();
-  if (index >= 0) await removeCustomTrack(index);
+  if (index >= 0) await removeTrack(index);
 }
 
-async function removeCustomTrack(index) {
+async function removeTrack(index) {
   const removed = tracks[index];
-  if (!removed?.custom) return;
+  if (!removed) return;
   const wasCurrent = index === current;
   if (wasCurrent) audio.pause();
   favoriteKeys.delete(trackKey(removed));
   saveFavorites();
-  URL.revokeObjectURL(removed.file);
-  const urlIndex = customTrackUrls.indexOf(removed.file);
-  if (urlIndex >= 0) customTrackUrls.splice(urlIndex, 1);
+  if (removed.custom) {
+    URL.revokeObjectURL(removed.file);
+    const urlIndex = customTrackUrls.indexOf(removed.file);
+    if (urlIndex >= 0) customTrackUrls.splice(urlIndex, 1);
+  } else {
+    deletedTrackIds.add(removed.id);
+    saveDeletedTracks();
+  }
   tracks.splice(index, 1);
   if (index < current) current -= 1;
   if (index < pendingTrack) pendingTrack -= 1;
   pendingTrack = Math.max(0, Math.min(pendingTrack, tracks.length - 1));
   current = Math.max(0, Math.min(current, tracks.length - 1));
-  try { await deleteLocalTrack(removed.id); } catch (error) { console.warn('Track could not be removed from local storage', error); }
-  if (wasCurrent && tracks.length) loadTrack(current, false);
+  if (removed.custom) {
+    try { await deleteLocalTrack(removed.id); } catch (error) { console.warn('Track could not be removed from local storage', error); }
+  }
+  if (!tracks.length) {
+    audio.pause();
+    audio.removeAttribute('src');
+    screenTitle.textContent = 'NO TRACKS';
+    screenArtist.textContent = 'ADD MUSIC';
+    screenIndex.textContent = '0';
+    nowDeleteButton.hidden = true;
+    favoriteButton.hidden = true;
+    renderTrackList();
+  } else if (wasCurrent) loadTrack(current, false);
   else {
     updateTrackSummary();
     updateFavoriteButton();
@@ -796,7 +847,7 @@ window.addEventListener('resize', resizeCanvas);
 window.addEventListener('beforeunload', () => customTrackUrls.forEach(url => URL.revokeObjectURL(url)));
 
 setVolume(.78);
-loadTrack(0);
+if (tracks.length) loadTrack(0);
 void restoreLocalLibrary();
 resizeCanvas();
 requestAnimationFrame(loop);

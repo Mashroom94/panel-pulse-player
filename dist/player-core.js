@@ -73,6 +73,18 @@ export function groupTracksByAlbum(tracks, indexes) {
   return [...groups.values()];
 }
 
+export function albumMetadataFromPath(relativePath) {
+  const parts = String(relativePath || '').split(/[\\/]+/).filter(Boolean);
+  if (parts.length < 2) return { artist: '', album: '' };
+  const albumFolder = parts.at(-2).trim();
+  if (parts.length >= 3) {
+    return { artist: parts.at(-3).trim(), album: albumFolder };
+  }
+  const combined = albumFolder.match(/^(.+?)\s+(?:—|–|-)\s+(.+)$/);
+  if (combined) return { artist: combined[1].trim(), album: combined[2].trim() };
+  return { artist: '', album: albumFolder };
+}
+
 function syncsafeSize(bytes, offset) {
   return ((bytes[offset] & 0x7f) << 21)
     | ((bytes[offset + 1] & 0x7f) << 14)

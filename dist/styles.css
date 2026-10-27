@@ -141,24 +141,28 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 .screen-top { display:flex; align-items:center; justify-content:space-between; gap:4%; font-size:clamp(6px,.75vh,9px); letter-spacing:.1em; white-space:nowrap; }
 .screen-top > span { opacity:.68; }
 .screen-top b { font-weight:700; }
-.all-button, .favorite-button, #allClose, #uploadButton, #searchButton, #deleteButton, .library-tabs button, .library-view-tabs button, .track-favorite { appearance:none; color:var(--window); font-weight:800; letter-spacing:.08em; cursor:pointer; }
+.all-button, .favorite-button, .now-delete-button, #allClose, #uploadButton, #searchButton, .upload-menu button, .delete-confirm button, .library-tabs button, .library-view-tabs button, .track-favorite { appearance:none; color:var(--window); font-weight:800; letter-spacing:.08em; cursor:pointer; }
 .all-button { padding:2px 5px; border:1px solid var(--window); border-radius:2px; background:rgba(var(--window-rgb),.16); color:#fff; opacity:1; font-size:1.05em; }
 .all-button span { color:var(--window); font-size:1.25em; line-height:.6; }
+.now-actions { display:flex; align-items:center; gap:4px; }
+.now-delete-button { display:grid; place-items:center; width:clamp(14px,1.65vh,18px); height:clamp(14px,1.65vh,18px); padding:1px; border:0; background:transparent; color:rgba(217,239,255,.72); }
+.now-delete-button[hidden] { display:none; }
+.now-delete-button svg { width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:1.55; stroke-linecap:round; stroke-linejoin:round; }
 .favorite-button { display:grid; place-items:center; width:clamp(16px,1.95vh,21px); height:clamp(15px,1.8vh,20px); padding:2px; border:0; background:transparent; }
 .favorite-button svg, .track-favorite svg { width:100%; height:100%; overflow:visible; fill:transparent; stroke:currentColor; stroke-width:1.8; stroke-linejoin:round; transition:fill 180ms ease, transform 180ms ease, color 180ms ease; }
 .favorite-button[aria-pressed="true"] svg, .track-favorite[aria-pressed="true"] svg { fill:var(--window); color:var(--window); transform:scale(1.06); }
-#allClose, #uploadButton, #searchButton, #deleteButton { min-width:22px; min-height:20px; padding:0; border:0; background:transparent; }
+#allClose, #uploadButton, #searchButton { min-width:22px; min-height:20px; padding:0; border:0; background:transparent; }
 #allClose { display:flex; align-items:center; gap:3px; text-align:left; }
 #allClose svg { width:clamp(8px,1vh,11px); height:auto; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
 .library-tools { display:flex; align-items:center; gap:3px; }
-#searchButton, #deleteButton { display:grid; place-items:center; color:rgba(217,239,255,.72); }
-#searchButton svg, #deleteButton svg { width:clamp(13px,1.55vh,17px); height:auto; fill:none; stroke:currentColor; stroke-width:1.55; stroke-linecap:round; stroke-linejoin:round; }
-#searchButton[aria-pressed="true"], #deleteButton[aria-pressed="true"] { color:var(--window); filter:drop-shadow(0 0 4px rgba(var(--window-rgb),.65)); }
+#searchButton { display:grid; place-items:center; color:rgba(217,239,255,.72); }
+#searchButton svg { width:clamp(13px,1.55vh,17px); height:auto; fill:none; stroke:currentColor; stroke-width:1.55; stroke-linecap:round; stroke-linejoin:round; }
+#searchButton[aria-pressed="true"] { color:var(--window); filter:drop-shadow(0 0 4px rgba(var(--window-rgb),.65)); }
 #uploadButton { display:flex; align-items:center; justify-content:center; min-width:25px; min-height:23px; color:#fff; border:1px solid rgba(var(--window-rgb),.85); border-radius:3px; background:rgba(var(--window-rgb),.14); text-align:center; }
 #uploadButton svg { width:clamp(19px,2.35vh,26px); height:auto; overflow:visible; fill:none; filter:drop-shadow(0 0 4px rgba(var(--window-rgb),.7)); }
 #uploadButton .upload-note { fill:none; stroke:currentColor; stroke-width:1.35; stroke-linecap:round; stroke-linejoin:round; }
 #uploadButton .upload-plus { fill:none; stroke:var(--window); stroke-width:1.65; stroke-linecap:round; }
-.all-button:focus-visible, .favorite-button:focus-visible, #allClose:focus-visible, #uploadButton:focus-visible, #searchButton:focus-visible, #deleteButton:focus-visible, .library-tabs button:focus-visible, .library-view-tabs button:focus-visible, .track-favorite:focus-visible { outline:1px solid var(--window); outline-offset:2px; }
+.all-button:focus-visible, .favorite-button:focus-visible, .now-delete-button:focus-visible, #allClose:focus-visible, #uploadButton:focus-visible, #searchButton:focus-visible, .upload-menu button:focus-visible, .delete-confirm button:focus-visible, .library-tabs button:focus-visible, .library-view-tabs button:focus-visible, .track-favorite:focus-visible { outline:1px solid var(--window); outline-offset:2px; }
 .screen-title-row { display:flex; align-items:flex-end; justify-content:space-between; gap:5%; margin-top:3.5%; }
 .screen-title { min-width:0; font-size:clamp(10px,1.36vh,14px); line-height:1.08; font-weight:800; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .screen-volume { flex:none; font-size:clamp(6px,.72vh,9px); opacity:.76; white-space:nowrap; }
@@ -178,9 +182,12 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 .color-hint { font-size:clamp(7px,.72vh,10px); line-height:1; letter-spacing:.09em; opacity:.78; white-space:nowrap; }
 
 .all-screen[hidden] { display:none; }
-.all-screen:not([hidden]) { display:flex; flex-direction:column; }
+.all-screen:not([hidden]) { position:relative; display:flex; flex-direction:column; }
 .all-actions { display:flex; align-items:center; justify-content:space-between; font-size:clamp(7px,.85vh,10px); font-weight:800; letter-spacing:.11em; }
-.all-title { margin:4% 0 0; font-size:clamp(8px,1.05vh,12px); line-height:1; letter-spacing:.12em; }
+.upload-menu { position:absolute; z-index:4; top:13%; right:0; display:flex; flex-direction:column; min-width:54%; padding:3px; border:1px solid rgba(var(--window-rgb),.72); border-radius:3px; background:#08131b; box-shadow:0 5px 12px rgba(0,0,0,.55); }
+.upload-menu[hidden] { display:none; }
+.upload-menu button { min-height:18px; padding:3px 5px; border:0; border-bottom:1px solid rgba(217,239,255,.1); background:transparent; color:#fff; text-align:left; font-size:clamp(5px,.62vh,8px); }
+.upload-menu button:last-child { border-bottom:0; }
 .search-row { margin-top:2.5%; }
 .search-row[hidden] { display:none; }
 .search-row input { appearance:none; width:100%; height:clamp(17px,2vh,22px); padding:2px 5px; border:1px solid rgba(var(--window-rgb),.7); border-radius:2px; outline:0; background:rgba(1,7,11,.72); color:#fff; font:inherit; font-size:clamp(5px,.62vh,8px); letter-spacing:.04em; }
@@ -195,7 +202,7 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 .library-tabs .favorites-tab { display:grid; place-items:center; width:22px; padding:2px 4px; }
 .library-tabs .favorites-tab svg { width:11px; height:11px; fill:transparent; stroke:currentColor; stroke-width:1.8; stroke-linejoin:round; }
 .library-tabs .favorites-tab[aria-selected="true"] svg { fill:var(--window); color:var(--window); }
-.track-list { list-style:none; padding:0 0 12%; margin:2.5% 0 0; min-height:0; flex:1; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#fff transparent; display:flex; flex-direction:column; gap:2%; counter-reset:tracks; }
+.track-list { list-style:none; padding:0 0 2%; margin:2.5% 0 0; min-height:0; flex:1; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#fff transparent; display:flex; flex-direction:column; gap:2%; counter-reset:tracks; }
 .track-list::-webkit-scrollbar { width:2px; }
 .track-list::-webkit-scrollbar-thumb { background:#fff; border-radius:2px; }
 .track-item { min-width:0; display:flex; align-items:center; padding-right:7px; }
@@ -205,8 +212,6 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 .track-choice small { flex:none; max-width:32%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:rgba(217,239,255,.32); font-size:clamp(4px,.49vh,6px); letter-spacing:.04em; }
 .track-item.selected .track-choice { color:#fff; background:rgba(var(--window-rgb),.15); outline:1px solid var(--window); }
 .track-item.current .track-choice::after { content:"•"; margin-left:auto; color:var(--window); }
-.delete-mode .track-item:not(.deletable) .track-choice { opacity:.25; cursor:not-allowed; }
-.delete-mode .track-item.deletable .track-choice { color:#fff; background:rgba(255,92,92,.08); outline:1px solid rgba(255,112,112,.5); }
 .track-favorite { flex:none; width:clamp(14px,1.55vh,18px); height:clamp(14px,1.55vh,18px); padding:2px; border:0; background:transparent; color:rgba(217,239,255,.45); }
 .album-group { list-style:none; padding:0; margin:0 7px 2% 0; border:1px solid rgba(217,239,255,.13); border-radius:3px; background:rgba(255,255,255,.025); }
 .album-heading { display:flex; align-items:baseline; justify-content:space-between; gap:6%; padding:4% 4% 2%; color:#fff; }
@@ -215,9 +220,16 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 .album-tracks { list-style:none; margin:0; padding:0 2% 3%; counter-reset:tracks; }
 .album-tracks .track-choice { min-height:16px; }
 .empty-library { display:grid; place-items:center; min-height:46px; padding:0 8%; color:rgba(217,239,255,.58); text-align:center; font-size:clamp(6px,.68vh,8px); line-height:1.35; letter-spacing:.06em; }
-.all-hint { position:absolute; left:5.1%; right:5.1%; bottom:3%; text-align:center; font-size:clamp(5px,.57vh,7px); letter-spacing:.07em; opacity:.62; }
+.delete-confirm { position:absolute; z-index:8; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7%; padding:10%; background:rgba(4,11,16,.97); text-align:center; }
+.delete-confirm[hidden] { display:none; }
+.delete-confirm strong { font-size:clamp(8px,1.05vh,12px); letter-spacing:.09em; }
+.delete-confirm > span { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:rgba(217,239,255,.64); font-size:clamp(6px,.7vh,9px); }
+.delete-confirm > div { display:flex; gap:8px; }
+.delete-confirm button { min-width:44px; padding:4px 8px; border:1px solid rgba(217,239,255,.22); border-radius:2px; background:transparent; color:#fff; font-size:clamp(6px,.72vh,9px); }
+#deleteConfirmButton { border-color:#ff7474; color:#ff9b9b; }
 
 .wheel { position:absolute; z-index:2; left:34.2%; top:48.7%; width:31.6%; height:21.1%; border-radius:50%; }
+.scene.confirming-delete .wheel { pointer-events:none; }
 .wheel-btn { position:absolute; appearance:none; border:0; background:transparent; text-shadow:0 1px 2px #000, 0 0 8px #000; font-weight:800; cursor:pointer; opacity:.82; padding:0; touch-action:manipulation; }
 .wheel-btn:hover, .wheel-btn:focus-visible { color:var(--window); outline:none; opacity:1; filter:drop-shadow(0 0 5px var(--window)); }
 .wheel-vol-up { left:34%; top:1%; width:32%; height:24%; font-size:clamp(17px,2.3vh,25px); }

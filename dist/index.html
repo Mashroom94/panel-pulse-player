@@ -27,7 +27,12 @@
           <div class="now-screen" id="nowScreen">
             <div class="screen-top">
               <span id="screenIndex">6</span>
-              <button class="all-button" id="allButton" type="button" aria-label="Открыть библиотеку треков">ALL <span aria-hidden="true">›</span></button>
+              <div class="now-actions">
+                <button class="now-delete-button" id="nowDeleteButton" type="button" aria-label="Удалить текущий трек" title="Удалить текущий трек" hidden>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 7.5h13M9 7.5V5.2h6v2.3m-7.7 0 .7 11h8l.7-11M10 10.5v5M14 10.5v5"/></svg>
+                </button>
+                <button class="all-button" id="allButton" type="button" aria-label="Открыть библиотеку треков">ALL <span aria-hidden="true">›</span></button>
+              </div>
             </div>
             <div class="screen-title-row">
               <div class="screen-title" id="screenTitle">IN CONFUSION</div>
@@ -66,9 +71,6 @@
                 <button id="searchButton" type="button" aria-label="Найти трек или альбом" title="Поиск">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.8"/><path d="m15 15 4.5 4.5"/></svg>
                 </button>
-                <button id="deleteButton" type="button" aria-label="Удалить трек из локальной библиотеки" aria-pressed="false" title="Удалить трек">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 7.5h13M9 7.5V5.2h6v2.3m-7.7 0 .7 11h8l.7-11M10 10.5v5M14 10.5v5"/></svg>
-                </button>
                 <button id="uploadButton" type="button" aria-label="Добавить треки с компьютера" title="Добавить свои треки">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path class="upload-note" d="M12.5 5.5v10.2m0-7.4L19 6.7v7.8M12.5 8.3 19 6.7"/>
@@ -79,8 +81,12 @@
                 </button>
               </div>
               <input id="trackUpload" type="file" accept="audio/*" multiple hidden>
+              <input id="albumUpload" type="file" accept="audio/*" webkitdirectory directory multiple hidden>
             </div>
-            <h2 class="all-title" id="libraryTitle">ALL TRACKS</h2>
+            <div class="upload-menu" id="uploadMenu" hidden>
+              <button id="uploadTracksButton" type="button">TRACKS</button>
+              <button id="uploadAlbumButton" type="button">ALBUM FOLDER</button>
+            </div>
             <div class="search-row" id="searchRow" hidden>
               <input id="librarySearch" type="search" autocomplete="off" placeholder="ТРЕК, ИСПОЛНИТЕЛЬ, АЛЬБОМ" aria-label="Поиск по библиотеке">
             </div>
@@ -99,7 +105,14 @@
               <button type="button" role="tab" data-filter="romantic" aria-selected="false">LOVE</button>
             </div>
             <ol class="track-list" id="trackList"></ol>
-            <div class="all-hint" id="allHint">НАЖМИ НА ТРЕК, ЧТОБЫ СЛУШАТЬ</div>
+          </div>
+          <div class="delete-confirm" id="deleteConfirm" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle" hidden>
+            <strong id="deleteConfirmTitle">УДАЛИТЬ ЭТОТ ТРЕК?</strong>
+            <span id="deleteConfirmName"></span>
+            <div>
+              <button id="deleteCancel" type="button">НЕТ</button>
+              <button id="deleteConfirmButton" type="button">ДА</button>
+            </div>
           </div>
         </div>
 

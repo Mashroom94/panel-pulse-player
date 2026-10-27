@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, groupTracksByAlbum, hasAudioSignal, matchesTrackSearch, parseId3Metadata, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
+import { albumMetadataFromPath, analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, groupTracksByAlbum, hasAudioSignal, matchesTrackSearch, parseId3Metadata, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
 
 test('wrapIndex cycles through every available track', () => {
   assert.equal(wrapIndex(6, 6), 0);
@@ -156,4 +156,11 @@ test('parseId3Metadata reads album, artist, and title tags from an uploaded mp3'
     artist: 'Mira',
     album: 'Blue'
   });
+});
+
+test('albumMetadataFromPath reads artist and album folders from a selected library folder', () => {
+  assert.deepEqual(albumMetadataFromPath('Mira/Blue/01 First Light.mp3'), { artist: 'Mira', album: 'Blue' });
+  assert.deepEqual(albumMetadataFromPath('Mira — Blue/01 First Light.mp3'), { artist: 'Mira', album: 'Blue' });
+  assert.deepEqual(albumMetadataFromPath('Blue/01 First Light.mp3'), { artist: '', album: 'Blue' });
+  assert.deepEqual(albumMetadataFromPath('01 First Light.mp3'), { artist: '', album: '' });
 });

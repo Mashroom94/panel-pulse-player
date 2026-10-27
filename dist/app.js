@@ -1,4 +1,4 @@
-import { analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, groupTracksByAlbum, hasAudioSignal, matchesTrackSearch, parseId3Metadata, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from './player-core.js';
+import { albumMetadataFromPath, analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, groupTracksByAlbum, hasAudioSignal, matchesTrackSearch, parseId3Metadata, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from './player-core.js';
 
 const tracks = [
   { id: 'builtin-in-confusion', title: 'In Confusion', artist: 'RAREERRA', album: 'Panel Pulse', file: 'audio/in-confusion.mp3', bpm: 92, energy: .44, brightness: .28 },
@@ -36,15 +36,21 @@ const favoriteButton = document.querySelector('#favoriteButton');
 const allClose = document.querySelector('#allClose');
 const uploadButton = document.querySelector('#uploadButton');
 const searchButton = document.querySelector('#searchButton');
-const deleteButton = document.querySelector('#deleteButton');
 const trackUpload = document.querySelector('#trackUpload');
+const albumUpload = document.querySelector('#albumUpload');
+const uploadMenu = document.querySelector('#uploadMenu');
+const uploadTracksButton = document.querySelector('#uploadTracksButton');
+const uploadAlbumButton = document.querySelector('#uploadAlbumButton');
+const nowDeleteButton = document.querySelector('#nowDeleteButton');
+const deleteConfirm = document.querySelector('#deleteConfirm');
+const deleteConfirmName = document.querySelector('#deleteConfirmName');
+const deleteCancel = document.querySelector('#deleteCancel');
+const deleteConfirmButton = document.querySelector('#deleteConfirmButton');
 const trackList = document.querySelector('#trackList');
-const libraryTitle = document.querySelector('#libraryTitle');
 const libraryTabs = document.querySelector('#libraryTabs');
 const libraryViewTabs = document.querySelector('#libraryViewTabs');
 const searchRow = document.querySelector('#searchRow');
 const librarySearch = document.querySelector('#librarySearch');
-const allHint = document.querySelector('#allHint');
 const equalizer = document.querySelector('#equalizer');
 const windowField = document.querySelector('#windowField');
 const canvas = document.querySelector('#weather');
@@ -71,7 +77,7 @@ let activeFilter = 'all';
 let playbackFilter = 'all';
 let libraryView = 'tracks';
 let searchQuery = '';
-let deleteMode = false;
+let pendingDeleteId = null;
 const customTrackUrls = [];
 const favoritesStorageKey = 'panel-pulse-favorites-v1';
 const libraryDatabaseName = 'panel-pulse-library-v1';
@@ -273,6 +279,8 @@ function loadTrack(index, autoplay = false) {
   audio.src = track.file;
   screenTitle.textContent = track.title.toUpperCase();
   screenArtist.textContent = (track.artist || 'UNKNOWN ARTIST').toUpperCase();
+  nowDeleteButton.hidden = !track.custom;
+  closeDeleteConfirmation();
   updateTrackSummary();
   smoothBass = 0;
   lastAudioSignal = 0;
@@ -286,19 +294,12 @@ function loadTrack(index, autoplay = false) {
 function renderTrackList() {
   trackList.innerHTML = '';
   const indexes = visibleTrackIndexes();
-  libraryTitle.textContent = libraryView === 'albums' && activeFilter === 'all'
-    ? 'ALBUMS'
-    : filterMeta[activeFilter].title;
   libraryTabs.querySelectorAll('[data-filter]').forEach(button => {
     button.setAttribute('aria-selected', String(button.dataset.filter === activeFilter));
   });
   libraryViewTabs.querySelectorAll('[data-view]').forEach(button => {
     button.setAttribute('aria-selected', String(button.dataset.view === libraryView));
   });
-  deleteButton.setAttribute('aria-pressed', String(deleteMode));
-  allScreen.classList.toggle('delete-mode', deleteMode);
-  allHint.textContent = deleteMode ? 'ВЫБЕРИ ДОБАВЛЕННЫЙ ТРЕК' : 'НАЖМИ НА ТРЕК, ЧТОБЫ СЛУШАТЬ';
-
   if (!indexes.length) {
     const empty = document.createElement('li');
     empty.className = 'empty-library';
@@ -337,7 +338,6 @@ function createTrackItem(index) {
     item.className = 'track-item';
     item.classList.toggle('selected', index === pendingTrack);
     item.classList.toggle('current', index === current);
-    item.classList.toggle('deletable', Boolean(track.custom));
     const button = document.createElement('button');
     button.className = 'track-choice';
     button.type = 'button';
@@ -347,10 +347,6 @@ function createTrackItem(index) {
     artist.textContent = (track.artist || '').toUpperCase();
     button.append(title, artist);
     button.addEventListener('click', () => {
-      if (deleteMode) {
-        if (track.custom) void removeCustomTrack(index);
-        return;
-      }
       pendingTrack = index;
       playbackFilter = activeFilter;
       showNowPlaying();
@@ -365,8 +361,30 @@ function createTrackItem(index) {
     favorite.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2 4.3 13A5.1 5.1 0 0 1 11.5 5.8l.5.5.5-.5A5.1 5.1 0 0 1 19.7 13Z"/></svg>';
     favorite.addEventListener('click', () => toggleFavorite(index));
     item.appendChild(button);
-    if (!deleteMode) item.appendChild(favorite);
+    item.appendChild(favorite);
     return item;
+}
+
+function openDeleteConfirmation() {
+  const track = tracks[current];
+  if (!track?.custom) return;
+  pendingDeleteId = track.id;
+  deleteConfirmName.textContent = track.title.toUpperCase();
+  deleteConfirm.hidden = false;
+  scene.classList.add('confirming-delete');
+  deleteCancel.focus();
+}
+
+function closeDeleteConfirmation() {
+  pendingDeleteId = null;
+  deleteConfirm.hidden = true;
+  scene.classList.remove('confirming-delete');
+}
+
+async function confirmTrackDeletion() {
+  const index = tracks.findIndex(track => track.id === pendingDeleteId && track.custom);
+  closeDeleteConfirmation();
+  if (index >= 0) await removeCustomTrack(index);
 }
 
 async function removeCustomTrack(index) {
@@ -420,6 +438,7 @@ function showAllTracks() {
 
 function showNowPlaying() {
   screenMode = 'now';
+  uploadMenu.hidden = true;
   nowScreen.hidden = false;
   allScreen.hidden = true;
   scene.classList.remove('browsing');
@@ -694,23 +713,34 @@ librarySearch.addEventListener('input', () => {
   searchQuery = librarySearch.value;
   renderTrackList();
 });
-deleteButton.addEventListener('click', () => {
-  deleteMode = !deleteMode;
-  renderTrackList();
+nowDeleteButton.addEventListener('click', openDeleteConfirmation);
+deleteCancel.addEventListener('click', closeDeleteConfirmation);
+deleteConfirmButton.addEventListener('click', () => { void confirmTrackDeletion(); });
+uploadButton.addEventListener('click', () => {
+  uploadMenu.hidden = !uploadMenu.hidden;
 });
-uploadButton.addEventListener('click', () => trackUpload.click());
-trackUpload.addEventListener('change', async () => {
-  const files = Array.from(trackUpload.files || []).filter(file => file.type.startsWith('audio/') || /\.(mp3|m4a|aac|wav|ogg|flac)$/i.test(file.name));
+uploadTracksButton.addEventListener('click', () => {
+  uploadMenu.hidden = true;
+  trackUpload.click();
+});
+uploadAlbumButton.addEventListener('click', () => {
+  uploadMenu.hidden = true;
+  albumUpload.click();
+});
+
+async function importSelectedFiles(fileList, folderMode = false) {
+  const files = Array.from(fileList || []).filter(file => file.type.startsWith('audio/') || /\.(mp3|m4a|aac|wav|ogg|flac)$/i.test(file.name));
   for (const file of files) {
     let metadata = {};
     try { metadata = parseId3Metadata(await file.slice(0, 512 * 1024).arrayBuffer()); } catch { /* Filename fallback below. */ }
+    const folderMetadata = folderMode ? albumMetadataFromPath(file.webkitRelativePath) : { artist: '', album: '' };
     const url = URL.createObjectURL(file);
     const fallbackFeatures = { bpm: 96, energy: .3, brightness: .38 };
     const track = {
       id: globalThis.crypto?.randomUUID?.() || `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       title: metadata.title || trackTitleFromFile(file.name),
-      artist: metadata.artist || 'Unknown artist',
-      album: metadata.album || '',
+      artist: metadata.artist || folderMetadata.artist || 'Unknown artist',
+      album: metadata.album || folderMetadata.album || '',
       file: url,
       ...fallbackFeatures,
       mood: classifyMood(fallbackFeatures),
@@ -726,11 +756,19 @@ trackUpload.addEventListener('change', async () => {
     void categorizeUploadedTrack(file, track);
   }
   navigator.storage?.persist?.().catch(() => {});
-  trackUpload.value = '';
   if (files.length) {
     updateTrackSummary();
     renderTrackList();
   }
+}
+
+trackUpload.addEventListener('change', async () => {
+  await importSelectedFiles(trackUpload.files, false);
+  trackUpload.value = '';
+});
+albumUpload.addEventListener('change', async () => {
+  await importSelectedFiles(albumUpload.files, true);
+  albumUpload.value = '';
 });
 seek.addEventListener('click', event => {
   if (!audio.duration) return;
@@ -752,6 +790,11 @@ document.querySelectorAll('.screen-swatch').forEach(button => {
 });
 
 document.addEventListener('keydown', event => {
+  if (!deleteConfirm.hidden) {
+    if (event.code === 'Escape') closeDeleteConfirmation();
+    event.preventDefault();
+    return;
+  }
   if (event.code === 'Space') { event.preventDefault(); togglePlay(); }
   if (event.code === 'ArrowRight' && screenMode === 'now') moveTrack(1, true);
   if (event.code === 'ArrowLeft' && screenMode === 'now') moveTrack(-1, true);

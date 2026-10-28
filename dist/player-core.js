@@ -21,6 +21,15 @@ export function weatherParticleTarget({ mode, paused, mobile }) {
   return 0;
 }
 
+export function isSkyNormalizedPoint({ u, v }) {
+  if (!Number.isFinite(u) || !Number.isFinite(v)) return false;
+  if (u < 0.105 || u > 0.895) return v >= 0 && v < 0.62;
+  let roof = 0.11;
+  if ((u >= 0.255 && u <= 0.335) || (u >= 0.67 && u <= 0.75)) roof = 0.045;
+  else if (u >= 0.45 && u <= 0.55) roof = 0.085;
+  return v >= 0 && v < roof;
+}
+
 export async function startPlayback({ play, resume, contextState }) {
   // Start both operations during the original user gesture. Awaiting resume()
   // before play() can make mobile browsers reject playback as autoplay.

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { albumMetadataFromPath, analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, groupTracksByAlbum, hasAudioSignal, matchesTrackSearch, parseId3Metadata, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
+import { albumMetadataFromPath, analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, groupTracksByAlbum, hasAudioSignal, isSkyNormalizedPoint, matchesTrackSearch, parseId3Metadata, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from '../dist/player-core.js';
 
 test('wrapIndex cycles through every available track', () => {
   assert.equal(wrapIndex(6, 6), 0);
@@ -29,6 +29,14 @@ test('weatherParticleTarget keeps stars visible while playback is paused', () =>
   assert.equal(weatherParticleTarget({ mode: 'rain', paused: true, mobile: true }), 0);
   assert.equal(weatherParticleTarget({ mode: 'rain', paused: false, mobile: true }), 240);
   assert.equal(weatherParticleTarget({ mode: 'clear', paused: false, mobile: false }), 0);
+});
+
+test('star mask keeps stars on the sky and off the apartment building', () => {
+  assert.equal(isSkyNormalizedPoint({ u: 0.04, v: 0.42 }), true);
+  assert.equal(isSkyNormalizedPoint({ u: 0.96, v: 0.3 }), true);
+  assert.equal(isSkyNormalizedPoint({ u: 0.5, v: 0.04 }), true);
+  assert.equal(isSkyNormalizedPoint({ u: 0.5, v: 0.2 }), false);
+  assert.equal(isSkyNormalizedPoint({ u: 0.28, v: 0.08 }), false);
 });
 
 test('startPlayback starts the media before waiting for the audio graph to resume', async () => {

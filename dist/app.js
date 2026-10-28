@@ -1,4 +1,4 @@
-import { albumMetadataFromPath, analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, groupTracksByAlbum, hasAudioSignal, matchesTrackSearch, parseId3Metadata, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from './player-core.js';
+import { albumMetadataFromPath, analyzePcmFeatures, clampVolume, classifyMood, filterTrackIndexes, formatTrackSummary, groupTracksByAlbum, hasAudioSignal, isSkyNormalizedPoint, matchesTrackSearch, parseId3Metadata, rhythmPulse, startPlayback, trackKey, trackTitleFromFile, weatherParticleTarget, weatherSpawnY, wrapIndex } from './player-core.js';
 
 const tracks = [
   { id: 'builtin-in-confusion', title: 'In Confusion', artist: 'RAREERRA', album: 'Panel Pulse', file: 'audio/in-confusion.mp3', bpm: 92, energy: .44, brightness: .28 },
@@ -661,8 +661,21 @@ function resizeCanvas() {
 
 function makeParticle(initial = true) {
   if (weatherMode === 'rain') return { x: Math.random() * (innerWidth + 40) - 20, y: weatherSpawnY({ height: innerHeight, initial }), vx: -.55 - Math.random() * 1.1, vy: 12 + Math.random() * 10, size: 14 + Math.random() * 20, alpha: .3 + Math.random() * .36 };
-  const skyHeight = Math.max(42, innerHeight * .12);
-  return { x: Math.random() * innerWidth, y: Math.random() * skyHeight, vx: 0, vy: 0, size: .35 + Math.random() * .85, alpha: .24 + Math.random() * .58, phase: Math.random() * Math.PI * 2, twinkle: .0007 + Math.random() * .0012 };
+  const artBounds = document.querySelector('.scene-art').getBoundingClientRect();
+  let x = innerWidth / 2;
+  let y = Math.max(2, artBounds.top + artBounds.height * .02);
+  for (let attempt = 0; attempt < 48; attempt += 1) {
+    const candidateX = Math.random() * innerWidth;
+    const candidateY = Math.random() * innerHeight * .68;
+    const u = (candidateX - artBounds.left) / artBounds.width;
+    const v = (candidateY - artBounds.top) / artBounds.height;
+    if (isSkyNormalizedPoint({ u, v })) {
+      x = candidateX;
+      y = candidateY;
+      break;
+    }
+  }
+  return { x, y, vx: 0, vy: 0, size: .35 + Math.random() * .85, alpha: .24 + Math.random() * .58, phase: Math.random() * Math.PI * 2, twinkle: .0007 + Math.random() * .0012 };
 }
 
 function drawWeather(now) {

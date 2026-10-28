@@ -1,4 +1,38 @@
-site-deploy.tar.gz
-.sites-runtime/
+# Local music sources and access-bearing source manifests
 .source-audio/
+dist/audio/sources.json
+
+# Secrets and machine-local configuration
+.env
+.env.*
+!.env.example
+*.local
+.npmrc
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+
+# Local databases and caches
+*.db
+*.sqlite
+*.sqlite3
+.cache/
+.sites-runtime/
+node_modules/
+coverage/
+
+# Logs, editor and OS files
+*.log
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Generated archives and local output
+site-deploy.tar.gz
+*.tar.gz
+*.zip
 outputs/

@@ -16,7 +16,7 @@ export function weatherSpawnY({ height, initial, random = Math.random() }) {
 }
 
 export function weatherParticleTarget({ mode, paused, mobile }) {
-  if (mode === 'stars') return 60;
+  if (mode === 'stars') return mobile ? 105 : 90;
   if (mode === 'rain' && !paused) return mobile ? 240 : 180;
   return 0;
 }

@@ -25,7 +25,8 @@ test('weatherSpawnY fills the visible mobile weather field on first render', () 
 });
 
 test('weatherParticleTarget keeps stars visible while playback is paused', () => {
-  assert.equal(weatherParticleTarget({ mode: 'stars', paused: true, mobile: false }), 60);
+  assert.equal(weatherParticleTarget({ mode: 'stars', paused: true, mobile: false }), 90);
+  assert.equal(weatherParticleTarget({ mode: 'stars', paused: false, mobile: true }), 105);
   assert.equal(weatherParticleTarget({ mode: 'rain', paused: true, mobile: true }), 0);
   assert.equal(weatherParticleTarget({ mode: 'rain', paused: false, mobile: true }), 240);
   assert.equal(weatherParticleTarget({ mode: 'clear', paused: false, mobile: false }), 0);

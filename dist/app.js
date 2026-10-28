@@ -78,6 +78,7 @@ let playbackFilter = 'all';
 let libraryView = 'tracks';
 let searchQuery = '';
 let pendingDeleteId = null;
+const expandedAlbums = new Set();
 const customTrackUrls = [];
 const favoritesStorageKey = 'panel-pulse-favorites-v1';
 const deletedTracksStorageKey = 'panel-pulse-deleted-tracks-v1';
@@ -334,21 +335,41 @@ function renderTrackList() {
   }
 
   if (libraryView === 'albums') {
-    groupTracksByAlbum(tracks, indexes).forEach(group => {
+    groupTracksByAlbum(tracks, indexes).forEach((group, groupIndex) => {
       const album = document.createElement('li');
       album.className = 'album-group';
-      const heading = document.createElement('div');
+      const albumKey = `${group.artist}\u0000${group.album}`;
+      const expanded = expandedAlbums.has(albumKey);
+      album.classList.toggle('expanded', expanded);
+      const heading = document.createElement('button');
       heading.className = 'album-heading';
+      heading.type = 'button';
+      heading.setAttribute('aria-expanded', String(expanded));
+      const panelId = `album-tracks-${groupIndex}`;
+      heading.setAttribute('aria-controls', panelId);
+      const chevron = document.createElement('span');
+      chevron.className = 'album-chevron';
+      chevron.setAttribute('aria-hidden', 'true');
+      chevron.innerHTML = '<svg viewBox="0 0 12 12"><path d="m4 2 4 4-4 4"/></svg>';
       const albumName = document.createElement('strong');
       albumName.textContent = group.album.toUpperCase();
       const albumMeta = document.createElement('span');
       albumMeta.textContent = `${group.artist.toUpperCase()} · ${group.indexes.length}`;
-      heading.append(albumName, albumMeta);
+      heading.append(chevron, albumName, albumMeta);
       album.appendChild(heading);
       const albumTracks = document.createElement('ol');
       albumTracks.className = 'album-tracks';
+      albumTracks.id = panelId;
+      albumTracks.hidden = !expanded;
       group.indexes.forEach(index => albumTracks.appendChild(createTrackItem(index)));
       album.appendChild(albumTracks);
+      heading.addEventListener('click', () => {
+        const opening = !expandedAlbums.has(albumKey);
+        if (opening) expandedAlbums.add(albumKey); else expandedAlbums.delete(albumKey);
+        heading.setAttribute('aria-expanded', String(opening));
+        album.classList.toggle('expanded', opening);
+        albumTracks.hidden = !opening;
+      });
       trackList.appendChild(album);
     });
     return;
@@ -374,7 +395,6 @@ function createTrackItem(index) {
     button.addEventListener('click', () => {
       pendingTrack = index;
       playbackFilter = activeFilter;
-      showNowPlaying();
       loadTrack(index, true);
     });
     const remove = document.createElement('button');

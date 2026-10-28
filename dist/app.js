@@ -486,7 +486,8 @@ function moveTrack(direction, autoplay = true) {
   const nextPosition = position < 0
     ? (direction > 0 ? 0 : available.length - 1)
     : wrapIndex(position + direction, available.length);
-  loadTrack(available[nextPosition], autoplay);
+  pendingTrack = available[nextPosition];
+  loadTrack(pendingTrack, autoplay);
 }
 
 function showAllTracks() {
@@ -552,11 +553,13 @@ async function playAudio() {
 
 function togglePlay() {
   if (screenMode === 'all') {
-    const queue = visibleTrackIndexes();
-    if (queue.length && !queue.includes(pendingTrack)) pendingTrack = queue[0];
-    playbackFilter = activeFilter;
-    showNowPlaying();
-    loadTrack(pendingTrack, true);
+    if (audio.paused) {
+      playbackFilter = activeFilter;
+      if (pendingTrack !== current) loadTrack(pendingTrack, true);
+      else playAudio();
+    } else {
+      audio.pause();
+    }
     return;
   }
   if (audio.paused) playAudio(); else audio.pause();
@@ -743,8 +746,14 @@ async function categorizeUploadedTrack(file, track) {
 }
 
 playButton.addEventListener('click', togglePlay);
-document.querySelector('#prev').addEventListener('click', () => { if (screenMode === 'now') moveTrack(-1, true); });
-document.querySelector('#next').addEventListener('click', () => { if (screenMode === 'now') moveTrack(1, true); });
+document.querySelector('#prev').addEventListener('click', () => {
+  if (screenMode === 'all') playbackFilter = activeFilter;
+  moveTrack(-1, true);
+});
+document.querySelector('#next').addEventListener('click', () => {
+  if (screenMode === 'all') playbackFilter = activeFilter;
+  moveTrack(1, true);
+});
 document.querySelector('#volUp').addEventListener('click', () => setVolume(audio.volume + .08));
 document.querySelector('#volDown').addEventListener('click', () => setVolume(audio.volume - .08));
 allButton.addEventListener('click', showAllTracks);

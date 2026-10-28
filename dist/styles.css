@@ -193,13 +193,13 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 .search-row input { appearance:none; width:100%; height:clamp(17px,2vh,22px); padding:2px 5px; border:1px solid rgba(var(--window-rgb),.7); border-radius:2px; outline:0; background:rgba(1,7,11,.72); color:#fff; font:inherit; font-size:clamp(5px,.62vh,8px); letter-spacing:.04em; }
 .search-row input::placeholder { color:rgba(217,239,255,.38); }
 .library-view-tabs { display:flex; align-self:center; width:76%; gap:2px; margin-top:.4%; }
-.library-view-tabs button { flex:1; min-height:12px; padding:1px 3px; border:0; border-bottom:1px solid rgba(217,239,255,.18); background:transparent; color:rgba(217,239,255,.42); font-size:clamp(5px,.62vh,7px); line-height:1; }
+.library-view-tabs button { flex:1; min-height:12px; padding:1px 3px; border:0; border-bottom:1px solid rgba(217,239,255,.18); background:transparent; color:rgba(217,239,255,.42); font-size:clamp(6px,.7vh,8px); line-height:1; }
 .library-view-tabs button[aria-selected="true"] { border-bottom-color:var(--window); color:#fff; }
 .library-tabs { display:flex; align-self:flex-start; width:max-content; max-width:100%; gap:1px; margin-top:1%; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:none; }
 .library-tabs::-webkit-scrollbar { display:none; }
-.library-tabs button { flex:none; min-height:15px; padding:2px 1px; border:1px solid rgba(217,239,255,.18); border-radius:2px; background:transparent; color:rgba(217,239,255,.52); font-size:clamp(6px,.66vh,8px); line-height:1; letter-spacing:.025em; }
+.library-tabs button { flex:none; min-height:15px; padding:2px 3px; border:1px solid rgba(217,239,255,.18); border-radius:2px; background:transparent; color:rgba(217,239,255,.52); font-size:clamp(6px,.66vh,8px); line-height:1; letter-spacing:.025em; }
 .library-tabs button[aria-selected="true"] { border-color:var(--window); background:rgba(var(--window-rgb),.17); color:#fff; }
-.library-tabs .favorites-tab { display:grid; place-items:center; width:17px; padding:1px 3px; }
+.library-tabs .favorites-tab { display:grid; place-items:center; width:21px; padding:1px 3px; }
 .library-tabs .favorites-tab svg { width:9px; height:9px; fill:transparent; stroke:currentColor; stroke-width:1.8; stroke-linejoin:round; }
 .library-tabs .favorites-tab[aria-selected="true"] svg { fill:var(--window); color:var(--window); }
 .track-list { list-style:none; padding:0 0 1%; margin:1% 0 0; min-height:0; flex:1; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#fff transparent; display:flex; flex-direction:column; gap:.15%; counter-reset:tracks; }
@@ -208,7 +208,7 @@ body.mood-romantic .scene.playing .window-light.hit { animation-name:windowBeatN
 .track-item { position:relative; min-width:0; display:flex; align-items:center; padding-right:7px; }
 .track-choice { min-width:0; width:calc(100% - 21px); flex:none; display:flex; align-items:center; gap:4%; min-height:13px; padding:.5% 2.5%; border:0; background:transparent; color:rgba(217,239,255,.66); text-align:left; cursor:pointer; touch-action:manipulation; }
 .track-choice::before { counter-increment:tracks; content:counter(tracks, decimal-leading-zero); flex:none; color:rgba(217,239,255,.35); font-size:clamp(5px,.56vh,7px); }
-.track-choice span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:clamp(5px,.61vh,7px); letter-spacing:.04em; }
+.track-choice span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:clamp(6px,.7vh,8px); letter-spacing:.07em; }
 .track-choice small { flex:none; max-width:32%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:rgba(217,239,255,.32); font-size:clamp(4px,.44vh,5px); letter-spacing:.04em; }
 .track-item.selected { padding-top:1px; padding-bottom:1px; }
 .track-item.selected .track-choice { z-index:1; min-height:15px; color:#fff; background:rgba(var(--window-rgb),.15); outline:1px solid var(--window); }

@@ -19,3 +19,16 @@ test('every bundled track is small enough to be served by static hosting', async
     );
   }
 });
+
+test('the public Molchat Doma tracks are bundled with the player', async () => {
+  const filenames = await readdir(audioDirectory);
+  const expectedTracks = [
+    'molchat-doma-lyudi-nadoeli.mp3',
+    'molchat-doma-sudno-boris-rizhiy.mp3',
+    'molchat-doma-volny.mp3',
+  ];
+
+  for (const filename of expectedTracks) {
+    assert.ok(filenames.includes(filename), `missing bundled track: ${filename}`);
+  }
+});

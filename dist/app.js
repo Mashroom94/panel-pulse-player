@@ -6,7 +6,10 @@ const tracks = [
   { id: 'builtin-neon-lambs', title: 'Neon Lambs', artist: 'RAREERRA', album: 'Panel Pulse', file: 'audio/neon-lambs.mp3', bpm: 122, energy: .72, brightness: .69 },
   { id: 'builtin-night-shine', title: 'Night Shine', artist: 'RAREERRA', album: 'Panel Pulse', file: 'audio/night-shine.mp3', bpm: 74, energy: .4, brightness: .63 },
   { id: 'builtin-silver-wires', title: 'Silver Wires', artist: 'RAREERRA', album: 'Panel Pulse', file: 'audio/silver-wires.mp3', bpm: 88, energy: .3, brightness: .43 },
-  { id: 'builtin-under-the-roofs', title: 'Under The Roofs', artist: 'RAREERRA', album: 'Panel Pulse', file: 'audio/under-the-roofs.mp3', bpm: 96, energy: .46, brightness: .31 }
+  { id: 'builtin-under-the-roofs', title: 'Under The Roofs', artist: 'RAREERRA', album: 'Panel Pulse', file: 'audio/under-the-roofs.mp3', bpm: 96, energy: .46, brightness: .31 },
+  { id: 'builtin-molchat-doma-lyudi-nadoeli', title: 'Люди надоели', artist: 'Молчат Дома', album: 'С крыш наших домов', file: 'audio/molchat-doma-lyudi-nadoeli.mp3', bpm: 95, energy: .5, brightness: .25 },
+  { id: 'builtin-molchat-doma-sudno', title: 'Судно (Борис Рыжий)', artist: 'Молчат Дома', album: 'Этажи', file: 'audio/molchat-doma-sudno-boris-rizhiy.mp3', bpm: 130, energy: .55, brightness: .24 },
+  { id: 'builtin-molchat-doma-volny', title: 'Волны', artist: 'Молчат Дома', album: 'Этажи', file: 'audio/molchat-doma-volny.mp3', bpm: 96, energy: .45, brightness: .6 }
 ];
 
 tracks.forEach(track => { track.mood = classifyMood(track); });
